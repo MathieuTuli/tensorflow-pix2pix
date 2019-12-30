@@ -10,6 +10,7 @@ class Downsample(layers.Layer):
                  filters: int,
                  kernel_size: Union[int, Tuple[int, int]],
                  batch_norm: bool = True,
+                 strides: Union[int, Tuple[int, int]] = 2,
                  **kwargs) -> None:
         super(Downsample, self).__init__(**kwargs)
         initializer = tf.random_normal_initializer(0., 0.02)
