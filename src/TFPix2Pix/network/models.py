@@ -4,14 +4,6 @@ from typing import Union, Tuple, List
 import tensorflow as tf
 import logging
 
-from .data_helpers import (
-    load,
-    resize,
-    random_crop,
-    normalize,
-    random_jitter,
-    load_image_train,
-    load_image_test,)
 from .layers import (
     Downsample,
     Upsample)
@@ -75,6 +67,20 @@ class Generator(Model):
         layer = self.last(layer)
         return layer
 
+    @staticmethod
+    @tf.funtion()
+    def loss(generator_output: tf.keras.Model,
+             discriminator_output: tf.keras.Model,
+             target: tf.data.Dataset,
+             _lambda: int) -> tf.losses.BinaryCrossentropy:
+
+        loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        gan_loss = loss_object(tf.ones_like(
+            discriminator_output), discriminator_output)
+        l1_loss = tf.reduce_mean(tf.abs(target - generator_output))
+        total_gen_loss = gan_loss + (_lambda * l1_loss)
+        return total_gen_loss
+
 
 class Discriminator(Model):
     """
@@ -111,23 +117,15 @@ class Discriminator(Model):
             layer = _layer(layer)
         return layer
 
-
-class Pix2Pix(Model):
-    """
-    """
-
-    def __init__(self,
-                 output_channels: int,
-                 **kwargs) -> None:
-        '''
-        '''
-        super(Pix2Pix, self).__init__(**kwargs)
-
-    def call(self,
-             inputs: Union[tf.Tensor,
-                           Tuple[tf.Tensor, ...],
-                           List[tf.Tensor]],
-             training: bool = False) -> Union[tf.Tensor,
-                                              Tuple[tf.Tensor, ...],
-                                              List[tf.Tensor]]:
-        return
+    @staticmethod
+    @tf.function()
+    def loss(
+            real_output: tf.keras.Model,
+            generated_output: tf.keras.Model,) -> tf.losses.BinaryCrossentropy:
+        loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        gan_loss = loss_object(tf.ones_like(
+        real_loss=self.loss_object(tf.ones_like(real_output), real_output)
+        generated_loss=self.loss_object(
+            tf.zeros_like(generated_output), generated_output)
+        total_loss=real_loss + generated_loss
+        return total_loss
