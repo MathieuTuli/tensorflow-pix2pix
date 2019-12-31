@@ -1,6 +1,6 @@
 from typing import NamedTuple
 
-import Enum
+from enum import Enum
 
 
 class ImageDirection(Enum):

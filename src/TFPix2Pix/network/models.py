@@ -19,16 +19,16 @@ class Generator(Model):
         '''
         '''
         super(Generator, self).__init__(**kwargs)
-        self.first = Downsample(filters=64, kernel_size=4,
-                                batch_norm=False)
         self.down_stack = [
+            Downsample(filters=64, kernel_size=4,
+                       batch_norm=False),
             Downsample(filters=128, kernel_size=4),
             Downsample(filters=256, kernel_size=4),
             Downsample(filters=512, kernel_size=4),
             Downsample(filters=512, kernel_size=4),
             Downsample(filters=512, kernel_size=4),
             Downsample(filters=512, kernel_size=4),
-            Downsample(filters=512, kernel_size=4), ]
+            Downsample(filters=512, kernel_size=4)]
         self.up_stack = [
             Upsample(filters=512, kernel_size=4, dropout=True),
             Upsample(filters=512, kernel_size=4, dropout=True),
@@ -36,7 +36,7 @@ class Generator(Model):
             Upsample(filters=512, kernel_size=4),
             Upsample(filters=256, kernel_size=4),
             Upsample(filters=128, kernel_size=4),
-            Upsample(filters=64, kernel_size=4), ]
+            Upsample(filters=64, kernel_size=4)]
         initializer = tf.random_normal_initializer(0., 0.02)
         self.last = layers.Conv2DTranspose(
             filters=output_channels,
@@ -54,7 +54,7 @@ class Generator(Model):
              training: bool = False) -> Union[tf.Tensor,
                                               Tuple[tf.Tensor, ...],
                                               List[tf.Tensor]]:
-        layer = self.first(inputs)
+        layer = inputs
         skips = []
         for downsample in self.down_stack:
             layer = downsample(layer)
@@ -68,18 +68,21 @@ class Generator(Model):
         return layer
 
     @staticmethod
-    @tf.funtion()
+    @tf.function()
     def loss(generator_output: tf.keras.Model,
              discriminator_output: tf.keras.Model,
              target: tf.data.Dataset,
-             _lambda: int) -> tf.losses.BinaryCrossentropy:
+             _lambda: int) -> Tuple[
+            tf.losses.BinaryCrossentropy,
+            tf.losses.BinaryCrossentropy,
+            tf.losses.BinaryCrossentropy]:
 
         loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
         gan_loss = loss_object(tf.ones_like(
             discriminator_output), discriminator_output)
         l1_loss = tf.reduce_mean(tf.abs(target - generator_output))
         total_gen_loss = gan_loss + (_lambda * l1_loss)
-        return total_gen_loss
+        return total_gen_loss, gan_loss, l1_loss
 
 
 class Discriminator(Model):
@@ -97,7 +100,6 @@ class Discriminator(Model):
             Downsample(filters=128, kernel_size=4),
             Downsample(filters=256, kernel_size=4),
             layers.ZeroPadding2D(),
-            tf.random_normal_initializer(0., 0.02),
             Downsample(filters=512, kernel_size=4, strides=1),
             layers.ZeroPadding2D(),
             layers.Conv2D(filters=1, kernel_size=4, strides=1,
@@ -123,9 +125,8 @@ class Discriminator(Model):
             real_output: tf.keras.Model,
             generated_output: tf.keras.Model,) -> tf.losses.BinaryCrossentropy:
         loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-        gan_loss = loss_object(tf.ones_like(
-        real_loss=self.loss_object(tf.ones_like(real_output), real_output)
-        generated_loss=self.loss_object(
+        real_loss = loss_object(tf.ones_like(real_output), real_output)
+        generated_loss = loss_object(
             tf.zeros_like(generated_output), generated_output)
-        total_loss=real_loss + generated_loss
+        total_loss = real_loss + generated_loss
         return total_loss

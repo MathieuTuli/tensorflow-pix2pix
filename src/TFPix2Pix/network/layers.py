@@ -17,7 +17,7 @@ class Downsample(layers.Layer):
         self.layer = layers.Conv2D(
             filters=filters,
             kernel_size=kernel_size,
-            strides=2,
+            strides=strides,
             padding='same',
             kernel_initializer=initializer,
             use_bias=False)
@@ -47,7 +47,7 @@ class Upsample(layers.Layer):
                  **kwargs) -> None:
         super(Upsample, self).__init__(**kwargs)
         initializer = tf.random_normal_initializer(0., 0.02)
-        self.layer = layers.Conv2D(
+        self.layer = layers.Conv2DTranspose(
             filters=filters,
             kernel_size=kernel_size,
             strides=2,
