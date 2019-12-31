@@ -39,4 +39,4 @@ def main():
     test_dataset = tf.data.Dataset.list_files(PATH+'test/*.jpg')
     test_dataset = test_dataset.map(load_image_test)
     test_dataset = test_dataset.batch(BATCH_SIZE)
-    fit(train_dataset, test_dataset, checkpoint_path, epochs=150)
+    fit(train_dataset, test_dataset, checkpoint_path, epochs=5)
