@@ -2,7 +2,7 @@ from setuptools import setup
 from glob import glob
 
 setup(
-    name='TFYOLOv3',
+    name='TFPix2Pix',
     use_scm_version=True,
     packages=[''],
     package_dir={'': 'src'},

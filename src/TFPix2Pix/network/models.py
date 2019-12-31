@@ -86,7 +86,6 @@ class Discriminator(Model):
         super(Discriminator, self).__init__(**kwargs)
         initializer = tf.random_normal_initializer(0., 0.02)
         self.concat = layers.Concatenate()
-        self.target = layers.Input(shape=[None, None, 3], name='target_image')
         self.stack = [
             Downsample(filters=64, kernel_size=4, batch_norm=False),
             Downsample(filters=128, kernel_size=4),
@@ -105,7 +104,9 @@ class Discriminator(Model):
              training: bool = False) -> Union[tf.Tensor,
                                               Tuple[tf.Tensor, ...],
                                               List[tf.Tensor]]:
-        layer = self.concat([inputs, self.target])
+
+        _input, _target = inputs
+        layer = self.concat([_input, _target])
         for _layer in self.stack:
             layer = _layer(layer)
         return layer
