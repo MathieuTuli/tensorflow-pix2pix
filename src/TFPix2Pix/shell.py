@@ -26,7 +26,7 @@ def main():
     IMG_WIDTH = 256
     IMG_HEIGHT = 256
     LAMBDA = 100
-    checkpoint_dir = './training_checkpoints'
+    checkpoint_dir = 'training_checkpoints'
     checkpoint_path = os.path.join(checkpoint_dir, "ckpt")
     PATH = os.path.join(os.path.dirname(path_to_zip), 'facades/')
     train_dataset = tf.data.Dataset.list_files(PATH + 'train/*.jpg')
