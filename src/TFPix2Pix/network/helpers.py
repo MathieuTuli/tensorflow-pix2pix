@@ -19,7 +19,7 @@ def load(image_path: str,
     @returns: Tuple, (input_image, target_image)
     '''
 
-    image = tf.io.read_file(str(image_path))
+    image = tf.io.read_file(image_path)
     image = tf.image.decode_jpeg(image)
 
     w = tf.shape(image)[1]
@@ -95,7 +95,7 @@ def random_jitter(input_image: tf.Tensor,
 def load_image_train(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
     height = 256
     width = 256
-    input_image, real_image = load(str(image_path), ImageDirection.AtoB)
+    input_image, real_image = load(image_path, ImageDirection.AtoB)
     input_image, real_image = random_jitter(
         input_image, real_image, height, width)
     input_image, real_image = normalize(input_image, real_image)
@@ -106,7 +106,7 @@ def load_image_train(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
 def load_image_test(image_path: str,) -> Tuple[tf.Tensor, tf.Tensor]:
     img_height = 256
     img_width = 256
-    input_image, real_image = load(str(image_path), ImageDirection.AtoB)
+    input_image, real_image = load(image_path, ImageDirection.AtoB)
     input_image, real_image = resize(input_image, real_image,
                                      img_height, img_width)
     input_image, real_image = normalize(input_image, real_image)
