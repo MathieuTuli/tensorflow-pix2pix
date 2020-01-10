@@ -14,81 +14,10 @@ from .helpers import (
 
 
 @tf.function
-def train_step(
-        generator,
-        discriminator,
-        generator_optimizer,
-        discriminator_optimizer,
-        input_image: tf.data.Dataset,
-        target: tf.data.Dataset,
-        epoch: int) -> None:
-    with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-        gen_output = generator(input_image, training=True)
-
-        disc_real_output = discriminator(
-            [input_image, target], training=True)
-        disc_generated_output = discriminator(
-            [input_image, gen_output], training=True)
-
-        gen_loss, gan_loss, gen_l1_loss = Generator.loss(
-            gen_output, disc_generated_output, target, _lambda=100)
-        disc_loss = Discriminator.loss(
-            disc_real_output, disc_generated_output)
-
-    generator_gradients = gen_tape.gradient(
-        gen_loss,
-        generator.trainable_variables)
-    discriminator_gradients = disc_tape.gradient(
-        disc_loss,
-        discriminator.trainable_variables)
-
-    generator_optimizer.apply_gradients(
-        zip(generator_gradients,
-            generator.trainable_variables))
-    discriminator_optimizer.apply_gradients(
-        zip(discriminator_gradients,
-            discriminator.trainable_variables))
-
-
-@tf.function
-def fit(train_ds: tf.data.Dataset,
-        test_ds: tf.data.Dataset,
+def fit(dataset_path: str,
         checkpoint_path: str,
         epochs: int = 30,
-        batch_size: int = 1) -> None:
-    generator = Generator(output_channels=3)
-    generator_optimizer = tf.keras.optimizers.Adam(2e-4,
-                                                   beta_1=0.5)
-    discriminator = Discriminator()
-    discriminator_optimizer = tf.keras.optimizers.Adam(2e-4,
-                                                       beta_1=0.5)
-    # checkpoint = tf.train.Checkpoint(
-    #     generator_optimizer=generator_optimizer,
-    #     discriminator_optimizer=discriminator_optimizer,
-    #     generator=generator,
-    #     discriminator=discriminator)
-
-    for epoch in range(epochs):
-        start = time.time()
-
-        # Train
-        for input_image, target in train_ds:
-            train_step(generator, discriminator, generator_optimizer,
-                       discriminator_optimizer, input_image, target, epoch)
-
-        # Test on the same image so that the progress of the model can be
-        # saving (checkpoint) the model every 20 epochs
-        # if (epoch + 1) % 20 == 0:
-        #     checkpoint.write(file_prefix=checkpoint_path)
-
-        print(
-            'Time taken for epoch {} is {} sec\n'.format(
-                epoch + 1,
-                time.time()-start))
-    print("DONE")
-
-
-if __name__ == "__main__":
+        batch_size: int = 1) -> bool:
     URL = 'https://people.eecs.berkeley.edu/~tinghuiz/projects/pix2pix/datasets/facades.tar.gz'
 
     path_to_zip = tf.keras.utils.get_file('facades.tar.gz',
@@ -96,7 +25,7 @@ if __name__ == "__main__":
                                           extract=True)
 
     BUFFER_SIZE = 400
-    BATCH_SIZE = 1
+    BATCH_SIZE = batch_size
     IMG_WIDTH = 256
     IMG_HEIGHT = 256
     LAMBDA = 100
@@ -113,6 +42,7 @@ if __name__ == "__main__":
     test_dataset = tf.data.Dataset.list_files(PATH+'test/*.jpg')
     test_dataset = test_dataset.map(load_image_test)
     test_dataset = test_dataset.batch(BATCH_SIZE)
+
     generator = Generator(output_channels=3)
     generator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                    beta_1=0.5)
@@ -124,17 +54,42 @@ if __name__ == "__main__":
     #     discriminator_optimizer=discriminator_optimizer,
     #     generator=generator,
     #     discriminator=discriminator)
-    epochs = 5
 
-    print("START")
     for epoch in range(epochs):
         start = time.time()
 
         # Train
-        print("EPOCH")
+        print(f"EPOCH {epoch}")
         for n, (input_image, target) in train_dataset.enumerate():
-            train_step(generator, discriminator, generator_optimizer,
-                       discriminator_optimizer, input_image, target, epoch)
+            print(f"Image {n}")
+            if n == 5:
+                break
+            with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+                gen_output = generator(input_image, training=True)
+
+                disc_real_output = discriminator(
+                    [input_image, target], training=True)
+                disc_generated_output = discriminator(
+                    [input_image, gen_output], training=True)
+
+                gen_loss, gan_loss, gen_l1_loss = Generator.loss(
+                    gen_output, disc_generated_output, target, _lambda=100)
+                disc_loss = Discriminator.loss(
+                    disc_real_output, disc_generated_output)
+
+            generator_gradients = gen_tape.gradient(
+                gen_loss,
+                generator.trainable_variables)
+            discriminator_gradients = disc_tape.gradient(
+                disc_loss,
+                discriminator.trainable_variables)
+
+            generator_optimizer.apply_gradients(
+                zip(generator_gradients,
+                    generator.trainable_variables))
+            discriminator_optimizer.apply_gradients(
+                zip(discriminator_gradients,
+                    discriminator.trainable_variables))
 
         # Test on the same image so that the progress of the model can be
         # saving (checkpoint) the model every 20 epochs
