@@ -5,49 +5,49 @@ import signal
 import time
 import sys
 
-from .models import Generator, Discriminator
-from ..components import ImageDirection
-from .helpers import load_image_train, load_image_test
+from .network.helpers import load_image_train, load_image_test
+from .network.models import Generator, Discriminator
+from .components import ImageDirection
 
 
 def args(sub_parser: _SubParsersAction) -> None:
     sub_parser.add_argument('--data', type=str.lower,
                             dest='data',
                             required=True,
-                            help='Dataset path')
+                            help='Required. Dataset path')
     sub_parser.add_argument('--checkpoint', type=str.lower,
                             dest='checkpoint',
                             required=True,
-                            help='Checkpoint path')
+                            help='Required. Checkpoint path')
     sub_parser.add_argument(
             '--image-direction', type=ImageDirection.__getitem__,
             choices=ImageDirection.__members__.values(),
             dest='image_direction',
             required=True,
-            help="Image Direction")
+            help="Required. Image Direction")
     sub_parser.add_argument('--epochs', type=int,
                             required=True,
-                            help='Number of epochs to train for')
+                            help='Required. Number of epochs to train for')
     sub_parser.add_argument('--batch-size', type=int,
                             dest='batch_size',
                             default=1,
-                            help='Batch Size for Training')
+                            help='Default = 1. Batch Size for Training.')
     sub_parser.add_argument('--buffer-size', type=int,
                             dest='buffer_size',
                             default=400,
-                            help='Buffer Size for Training')
+                            help='Default = 400. Buffer Size for Training')
     sub_parser.add_argument('--lambda', type=int,
                             dest='_lambda',
                             default=100,
-                            help='Lambda value for Training')
+                            help='Default = 100. Lambda value for Training')
     sub_parser.add_argument('--save-freq', type=int,
                             dest='save_freq',
                             default=20,
-                            help='Save every X number of epochs')
+                            help='Default = 20. Save every X number of epochs')
     sub_parser.add_argument(
         '--gpu', action='store_true',
         dest='gpu',
-        help="Set if using gpu")
+        help="Default = False. Set if using gpu")
     sub_parser.set_defaults(gpu=False)
 
 

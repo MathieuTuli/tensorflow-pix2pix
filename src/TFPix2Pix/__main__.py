@@ -6,7 +6,7 @@ import signal
 import sys
 
 from .components import LogLevel
-from .helper import file_exists
+from .helpers import file_exists
 from .train import args as train_args, fit
 from .test import args as test_args
 
@@ -39,15 +39,15 @@ test_subparser = subparser.add_parser(
 test_args(test_subparser)
 
 args = parser.parse_args()
-if args.log_level == 'DEBUG' or args.very_verbose:
+if args.log_level == LogLevel.DEBUG or args.very_verbose:
     logging.root.setLevel(logging.DEBUG)
-elif args.log_level == 'INFO' or args.verbose:
+elif args.log_level == LogLevel.INFO or args.verbose:
     logging.root.setLevel(logging.INFO)
-elif args.log_level == 'WARNING':
+elif args.log_level == LogLevel.WARNING:
     logging.root.setLevel(logging.WARNING)
-elif args.log_level == 'ERROR':
+elif args.log_level == LogLevel.ERROR:
     logging.root.setLevel(logging.ERROR)
-elif args.log_level == 'CRITICAL':
+elif args.log_level == LogLevel.CRITICAL:
     logging.root.setLevel(logging.CRITICAL)
 else:
     logging.root.setLevel(logging.INFO)
@@ -69,7 +69,8 @@ signal.signal(signal.SIGINT, control_c_handler)
 
 
 if __name__ == "__main__":
-    if str(args.command) == 'train':
+    command = '' if args.command is None else str(args.command).lower()
+    if command == 'train':
         data = Path(args.data)
         checkpoint = Path(args.checkpoint)
 
@@ -86,17 +87,17 @@ if __name__ == "__main__":
                     gpu=args.gpu,
                     output_channels=args.output_channels)
             else:
-                logging.error(
+                logging.critical(
                         f"TFPix2Pix: Checkpoint path {checkpoint} doesn't " +
                         "exist")
                 sys.exit(0)
         else:
-            logging.error(f"TFPix2Pix: Data path {data} doesn't exist")
+            logging.critical(f"TFPix2Pix: Data path {data} doesn't exist")
             sys.exit(0)
-    elif str(args.command) == 'test':
+    elif command == 'test':
         ...
     else:
-        logging.error(
-            f"TFPix2Pix: Command \"{args.command.lower()}\" unknown. " +
+        logging.critical(
+            f"TFPix2Pix: Command \"{command}\" unknown. " +
             "'train' and 'test' allowed.")
         sys.exit(0)
