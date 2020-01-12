@@ -75,22 +75,26 @@ if __name__ == "__main__":
         checkpoint = Path(args.checkpoint)
 
         if file_exists(data):
-            if file_exists(checkpoint):
-                fit(dataset_path=str(data),
-                    checkpoint_path=str(checkpoint),
-                    image_direction=args.image_direction,
-                    epochs=args.epochs,
-                    batch_size=args.batch_size,
-                    buffer_size=args.buffer_size,
-                    _lambda=args._lambda,
-                    checkpoint_save_freq=args.save_freq,
-                    gpu=args.gpu,
-                    output_channels=args.output_channels)
-            else:
+            children = [str(i.name) for i in data.iterdir()]
+            if 'train' not in children or 'test' not in children:
                 logging.critical(
-                        f"TFPix2Pix: Checkpoint path {checkpoint} doesn't " +
-                        "exist")
+                        f"TFPix2Pix: Data path doesn't have 'train' and " +
+                        f"'test' dir. Children of data path are {children}")
                 sys.exit(0)
+            if not file_exists(checkpoint):
+                logging.info(
+                        f"TFPix2Pix: Checkpoint path {checkpoint} doesn't " +
+                        "exist. Creating.")
+                checkpoint.mkdir(parents=True)
+            fit(dataset_path=str(data),
+                checkpoint_path=str(checkpoint),
+                image_direction=args.image_direction,
+                epochs=args.epochs,
+                batch_size=args.batch_size,
+                buffer_size=args.buffer_size,
+                _lambda=args._lambda,
+                checkpoint_save_freq=args.save_freq,
+                gpu=args.gpu,)
         else:
             logging.critical(f"TFPix2Pix: Data path {data} doesn't exist")
             sys.exit(0)
