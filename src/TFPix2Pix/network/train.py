@@ -17,6 +17,7 @@ from .helpers import (
 @tf.function
 def fit(dataset_path: str,
         checkpoint_path: str,
+        image_direction: ImageDirection,
         epochs: int = 30,
         batch_size: int = 1,
         buffer_size: int = 400,
