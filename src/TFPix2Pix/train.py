@@ -133,7 +133,7 @@ def fit(dataset_path: Path,
                         f"TFPix2Pix Train: Image: {n}")
 
                     # TODO: Why does adding tf.function() make it run slower
-                    @tf.function()
+                    # @tf.function()
                     def train_step(input_image: tf.Tensor,
                                    target: tf.Tensor) -> None:
                         with tf.GradientTape() as gen_tape, tf.GradientTape() \
