@@ -3,16 +3,13 @@ UHINET Network Pix2Pix Data Helpers
 
 @credit: Google (https://www.tensorflow.org/tutorials/generative/pix2pix)
 '''
-from pathlib import Path
-from typing import Tuple, Optional, List
+from typing import Tuple
 
 import tensorflow as tf
-import logging
 
 from ..components import ImageDirection
 
 
-# TODO : which direction , this used left to right
 def load(image_path: str,
          direction: ImageDirection) -> Tuple[tf.Tensor, tf.Tensor]:
     '''

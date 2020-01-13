@@ -71,30 +71,31 @@ signal.signal(signal.SIGINT, control_c_handler)
 if __name__ == "__main__":
     command = '' if args.command is None else str(args.command).lower()
     if command == 'train':
-        data = Path(args.data)
-        checkpoint = Path(args.checkpoint)
+        data = Path(args.data).expanduser()
+        checkpoint = Path(args.checkpoint).expanduser()
 
         if file_exists(data):
             children = [str(i.name) for i in data.iterdir()]
             if 'train' not in children or 'test' not in children:
                 logging.critical(
-                        f"TFPix2Pix: Data path doesn't have 'train' and " +
-                        f"'test' dir. Children of data path are {children}")
+                    f"TFPix2Pix: Data path doesn't have 'train' and " +
+                    f"'test' dir. Children of data path are {children}")
                 sys.exit(0)
             if not file_exists(checkpoint):
                 logging.info(
-                        f"TFPix2Pix: Checkpoint path {checkpoint} doesn't " +
-                        "exist. Creating.")
+                    f"TFPix2Pix: Checkpoint path {checkpoint} doesn't " +
+                    "exist. Creating.")
                 checkpoint.mkdir(parents=True)
-            fit(dataset_path=str(data),
-                checkpoint_path=str(checkpoint),
+            fit(dataset_path=data,
+                checkpoint_path=checkpoint,
                 image_direction=args.image_direction,
                 epochs=args.epochs,
                 batch_size=args.batch_size,
                 buffer_size=args.buffer_size,
                 _lambda=args._lambda,
                 checkpoint_save_freq=args.save_freq,
-                gpu=args.gpu,)
+                gpu=args.gpu,
+                eager=args.eager)
         else:
             logging.critical(f"TFPix2Pix: Data path {data} doesn't exist")
             sys.exit(0)
