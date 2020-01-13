@@ -31,11 +31,12 @@ For arch users, follow the following links and download the proper packages. (
 
 
 #### TODO
-- [ ] Build the network
-- [ ] GPU Acceleration
+- [x] Build the network
+- [x] GPU Acceleration
 - [ ] Inference demo code
 - [ ] Training pipeline
   - [ ] eager mode (`tf.GradientTape`)
   - [ ] graph mode (`model.fit`)
-- [ ] Tensorflow Best Practices
+  - [ ] tf.function() slow issue
+- [x] Tensorflow Best Practices
   - subclass `tf.keras.Model` and `tf.keras.layers.Layer`
