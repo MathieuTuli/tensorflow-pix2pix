@@ -96,21 +96,21 @@ def fit(dataset_path: Path,
                   f"@param gpu                   |  {gpu} \n")
 
     device = '/device:CPU:0' if not gpu else '/device:GPU:0'
+    train_dataset = tf.data.Dataset.list_files(
+        str(dataset_path / 'train/*'))
+    train_dataset = train_dataset.map(
+        load_image_train,
+        num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+    train_dataset = train_dataset.shuffle(buffer_size)
+    train_dataset = train_dataset.batch(batch_size)
+    test_dataset = tf.data.Dataset.list_files(
+        str(dataset_path / 'test/*'))
+    test_dataset = test_dataset.map(load_image_test)
+    test_dataset = test_dataset.batch(batch_size)
+
     try:
         with tf.device(device):
-            train_dataset = tf.data.Dataset.list_files(
-                str(dataset_path / 'train/*'))
-            train_dataset = train_dataset.map(
-                load_image_train,
-                num_parallel_calls=tf.data.experimental.AUTOTUNE)
-
-            train_dataset = train_dataset.shuffle(buffer_size)
-            train_dataset = train_dataset.batch(batch_size)
-            test_dataset = tf.data.Dataset.list_files(
-                str(dataset_path / 'test/*'))
-            test_dataset = test_dataset.map(load_image_test)
-            test_dataset = test_dataset.batch(batch_size)
-
             generator = Generator(output_channels=3)
             generator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                            beta_1=0.5)
@@ -132,7 +132,8 @@ def fit(dataset_path: Path,
                     logging.debug(
                         f"TFPix2Pix Train: Image: {n}")
 
-                    @tf.function
+                    # TODO: Why does adding tf.function() make it run slower
+                    @tf.function()
                     def train_step(input_image: tf.Tensor,
                                    target: tf.Tensor) -> None:
                         with tf.GradientTape() as gen_tape, tf.GradientTape() \
@@ -163,7 +164,7 @@ def fit(dataset_path: Path,
                         discriminator_optimizer.apply_gradients(
                             zip(discriminator_gradients,
                                 discriminator.trainable_variables))
-                    train_step(input_image, target)
+                    train_step(input_image=input_image, target=target)
 
                 if (epoch + 1) % checkpoint_save_freq == 0:
                     checkpoint.write(file_prefix=checkpoint_path)
@@ -177,4 +178,5 @@ def fit(dataset_path: Path,
                     f"{(epochs - epoch + 1) * (end - start)}s")
     except Exception as e:
         logging.error(f"TFPix2Pix Train: {e}")
+        return False
     return True
