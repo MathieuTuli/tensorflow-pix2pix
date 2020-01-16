@@ -42,7 +42,7 @@ def resize(input_image: tf.Tensor,
         method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     real_image = tf.image.resize(
         real_image, [height, width],
-        method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        method=tf.image.resizemethod.nearest_neighbor)
     return input_image, real_image
 
 
@@ -109,3 +109,16 @@ def load_image_test(image_path: str,) -> Tuple[tf.Tensor, tf.Tensor]:
     input_image, real_image = normalize(input_image, real_image)
 
     return input_image, real_image
+
+
+def load_image(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
+    img_height = 256
+    img_width = 256
+    image = tf.io.read_file(image_path)
+    image = tf.image.decode_jpeg(image)
+    image = tf.image.resize(
+        image, [img_height, img_width],
+        method=tf.image.resizemethod.nearest_neighbor)
+    image = (image / 127.5) - 1
+    return image, tf.Constant(image_path.split('/')[-1].split('.')[0],
+                              tf.string)
