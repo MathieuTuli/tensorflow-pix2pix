@@ -84,6 +84,9 @@ class Generator(Model):
         total_gen_loss = gan_loss + (_lambda * l1_loss)
         return total_gen_loss, gan_loss, l1_loss
 
+    def infer(self):
+        ...
+
 
 class Discriminator(Model):
     """
