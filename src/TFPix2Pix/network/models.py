@@ -8,6 +8,7 @@ import logging
 from .layers import (
     Downsample,
     Upsample)
+from .helpers import load_image
 
 
 class Generator(Model):
@@ -85,7 +86,7 @@ class Generator(Model):
         total_gen_loss = gan_loss + (_lambda * l1_loss)
         return total_gen_loss, gan_loss, l1_loss
 
-    def infer(self, image: Path):
+    def infer(self, image_path: Path):
         ...
 
 

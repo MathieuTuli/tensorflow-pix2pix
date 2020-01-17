@@ -111,7 +111,7 @@ def load_image_test(image_path: str,) -> Tuple[tf.Tensor, tf.Tensor]:
     return input_image, real_image
 
 
-def load_image(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
+def load_image(image_path: str) -> tf.Tensor:
     img_height = 256
     img_width = 256
     image = tf.io.read_file(image_path)
@@ -119,5 +119,6 @@ def load_image(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
     image = tf.image.resize(
         image, [img_height, img_width],
         method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-    image = (image / 127.5) - 1
+
+    image = (tf.cast(image, tf.float32) / 127.5) - 1
     return image

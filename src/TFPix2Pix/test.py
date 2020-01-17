@@ -65,41 +65,55 @@ def infer(checkpoint: Path,
                   f"@param batch_size   |  {batch_size} \n"
                   f"@param gpu          |  {gpu} \n")
 
-    if checkpoint.is_dir():
-        checkpoint = tf.train.latest_checkpoint(str(checkpoint))
-    elif checkpoint.suffix != '.ckpt':
-        logging.critical(f"TFPix2Pix Testing: checkpoint path {checkpoint} " +
-                         "is invalid")
-        return False
+    # if checkpoint.is_dir():
+    #     checkpoint = tf.train.latest_checkpoint(str(checkpoint))
+    # elif checkpoint.suffix != '.ckpt':
+    #     logging.critical(f"TFPix2Pix Testing: checkpoint path {checkpoint} " +
+    #                      "is invalid")
+    #     return False
 
-    dataset = tf.data.Dataset.list_files(
-        str(input_path / '*'))
-    dataset = dataset.map(load_image)
-    dataset = dataset.batch(batch_size)
-    logging.debug("TFPix2Pix Test:  Dataset created.\n\n")
+    # dataset = tf.data.Dataset.list_files(
+    #     str(input_path / '*'))
+    # dataset = dataset.map(load_image)
+    # dataset = dataset.batch(batch_size)
+    # logging.debug("TFPix2Pix Test:  Dataset created.\n\n")
 
     device = '/device:CPU:0' if not gpu else '/device:GPU:0'
     logging.debug("TFPix2Pix Test: Starting try block")
-    try:
-        with tf.device(device):
-            model = Generator(output_channels=3)
-            logging.debug("TFPix2Pix Test: Generator Created")
-            model.load_weights(checkpoint)
-            logging.info("TFPix2Pix Test: weights loaded.")
-            for n, (image, name) in dataset.enumerate():
-                prediction = model(image, training=False)
-                if isinstance(prediction, list):
-                    if len(prediction) > 1:
-                        prediction = prediction[0]
-                    else:
-                        logging.critical("TFPix2Pix Test: prediction " +
-                                         "returned was a list of size 0")
-                    return False
-                path = output_path / 'test.jpg'
-                save_pyplot(file_name=str(path),
-                            image=prediction)
-                logging.info(f"TFPix2Pix Test: image saved to {path}")
-    except Exception as e:
-        logging.error(f"TFPix2Pix Test: Exception: {e}")
-        return False
+    # try:
+    with tf.device(device):
+        model = Generator(output_channels=3)
+        logging.debug("TFPix2Pix Test: Generator Created")
+        model.load_weights(str(checkpoint / 'generator.ckpt'))
+        logging.debug("TFPix2Pix Test: weights loaded.")
+        image = load_image(str(input_path))
+        prediction = model(image, training=False)
+        if isinstance(prediction, list):
+            if len(prediction) > 1:
+                prediction = prediction[0]
+            else:
+                logging.critical("TFPix2Pix Test: prediction " +
+                                 "returned was a list of size 0")
+            return False
+        path = output_path / 'test.jpg'
+        save_pyplot(file_name=str(path),
+                    image=prediction)
+        logging.info(f"TFPix2Pix Test: image saved to {path}")
+        # for n, image in dataset.enumerate():
+        #     logging.debug("TFPix2Pix Test: Image\n\n")
+        #     prediction = model(image, training=False)
+        #     if isinstance(prediction, list):
+        #         if len(prediction) > 1:
+        #             prediction = prediction[0]
+        #         else:
+        #             logging.critical("TFPix2Pix Test: prediction " +
+        #                              "returned was a list of size 0")
+        #         return False
+        #     path = output_path / 'test.jpg'
+        #     save_pyplot(file_name=str(path),
+        #                 image=prediction)
+        #     logging.info(f"TFPix2Pix Test: image saved to {path}")
+    # except Exception as e:
+    #     logging.error(f"TFPix2Pix Test: Exception: {e}")
+    #     return False
     return True
