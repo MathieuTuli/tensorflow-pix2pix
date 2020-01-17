@@ -17,13 +17,14 @@ class Generator(Model):
 
     def __init__(self,
                  output_channels: int,
+                 input_shape: Tuple[int, int, int] = None,
                  **kwargs) -> None:
         '''
         '''
         super(Generator, self).__init__(**kwargs)
         self.down_stack = [
             Downsample(filters=64, kernel_size=4,
-                       batch_norm=False),
+                       batch_norm=False, input_shape=input_shape),
             Downsample(filters=128, kernel_size=4),
             Downsample(filters=256, kernel_size=4),
             Downsample(filters=512, kernel_size=4),

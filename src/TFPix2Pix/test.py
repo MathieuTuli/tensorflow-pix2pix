@@ -82,7 +82,7 @@ def infer(checkpoint: Path,
     logging.debug("TFPix2Pix Test: Starting try block")
     # try:
     with tf.device(device):
-        model = Generator(output_channels=3)
+        model = Generator(output_channels=3, input_shape=(256, 256, 3))
         logging.debug("TFPix2Pix Test: Generator Created")
         model.load_weights(str(checkpoint / 'generator.ckpt'))
         logging.debug("TFPix2Pix Test: weights loaded.")

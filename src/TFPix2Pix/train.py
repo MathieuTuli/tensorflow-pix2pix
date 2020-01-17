@@ -111,7 +111,7 @@ def fit(dataset_path: Path,
 
     try:
         with tf.device(device):
-            generator = Generator(output_channels=3)
+            generator = Generator(output_channels=3, input_shape=(256, 256, 3))
             generator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                            beta_1=0.5)
             discriminator = Discriminator()
