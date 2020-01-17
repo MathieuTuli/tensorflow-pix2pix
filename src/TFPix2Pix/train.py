@@ -12,11 +12,11 @@ from .components import ImageDirection
 
 
 def args(sub_parser: _SubParsersAction) -> None:
-    sub_parser.add_argument('--data', type=str.lower,
+    sub_parser.add_argument('--data', type=str,
                             dest='data',
                             required=True,
                             help='Required. Dataset path')
-    sub_parser.add_argument('--checkpoint', type=str.lower,
+    sub_parser.add_argument('--checkpoint', type=str,
                             dest='checkpoint',
                             required=True,
                             help='Required. Checkpoint path')

@@ -12,15 +12,15 @@ from .file_manager import save_pyplot
 
 
 def args(sub_parser: _SubParsersAction) -> None:
-    sub_parser.add_argument('--weights', type=str.lower,
+    sub_parser.add_argument('--weights', type=str,
                             dest='weights',
                             required=True,
                             help='Required. Weights file path')
-    sub_parser.add_argument('--input', type=str.lower,
+    sub_parser.add_argument('--input', type=str,
                             dest='input',
                             required=True,
                             help='Required. Input images dir path')
-    sub_parser.add_argument('--output', type=str.lower,
+    sub_parser.add_argument('--output', type=str,
                             dest='output',
                             required=True,
                             help='Required. Output images dir path')
