@@ -118,7 +118,6 @@ def load_image(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
     image = tf.image.decode_jpeg(image)
     image = tf.image.resize(
         image, [img_height, img_width],
-        method=tf.image.resizemethod.nearest_neighbor)
+        method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     image = (image / 127.5) - 1
-    return image, tf.Constant(image_path.split('/')[-1].split('.')[0],
-                              tf.string)
+    return image

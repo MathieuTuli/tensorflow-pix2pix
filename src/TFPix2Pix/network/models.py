@@ -1,5 +1,6 @@
 from tensorflow.keras import layers, Model
 from typing import Union, Tuple, List
+from pathlib import Path
 
 import tensorflow as tf
 import logging
@@ -84,7 +85,7 @@ class Generator(Model):
         total_gen_loss = gan_loss + (_lambda * l1_loss)
         return total_gen_loss, gan_loss, l1_loss
 
-    def infer(self):
+    def infer(self, image: Path):
         ...
 
 

@@ -8,7 +8,7 @@ import sys
 from .components import LogLevel
 from .helpers import file_exists
 from .train import args as train_args, fit
-from .test import args as test_args
+from .test import args as test_args, infer
 
 print("\n---------------------------------")
 print("TFPix2Pix")
@@ -100,7 +100,24 @@ if __name__ == "__main__":
             logging.critical(f"TFPix2Pix: Data path {data} doesn't exist")
             sys.exit(0)
     elif command == 'test':
-        ...
+        weights = Path(args.weights)
+        input_path = Path(args.input)
+        output_path = Path(args.output)
+        if weights.exists():
+            if input_path.exists():
+                infer(checkpoint=weights,
+                      input_path=input_path,
+                      output_path=output_path,
+                      batch_size=args.batch_size,
+                      gpu=args.gpu)
+            else:
+                logging.critical(
+                        f"TFPix2Pix: Input path {input_path} doesn't exist")
+                sys.exit(0)
+        else:
+            logging.critical(
+                    f"TFPix2Pix: Weights path {weights} doesn't exist")
+            sys.exit(0)
     else:
         logging.critical(
             f"TFPix2Pix: Command \"{command}\" unknown. " +
