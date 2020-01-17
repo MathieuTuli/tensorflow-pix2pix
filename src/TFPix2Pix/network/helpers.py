@@ -42,7 +42,7 @@ def resize(input_image: tf.Tensor,
         method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     real_image = tf.image.resize(
         real_image, [height, width],
-        method=tf.image.resizemethod.nearest_neighbor)
+        method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     return input_image, real_image
 
 
