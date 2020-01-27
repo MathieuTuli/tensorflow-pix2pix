@@ -95,7 +95,8 @@ if __name__ == "__main__":
                 _lambda=args._lambda,
                 checkpoint_save_freq=args.save_freq,
                 gpu=args.gpu,
-                eager=args.eager)
+                eager=args.eager,
+                input_shape=args.input_shape)
         else:
             logging.critical(f"TFPix2Pix: Data path {data} doesn't exist")
             sys.exit(0)
@@ -109,14 +110,15 @@ if __name__ == "__main__":
                       input_path=input_path,
                       output_path=output_path,
                       batch_size=args.batch_size,
-                      gpu=args.gpu)
+                      gpu=args.gpu,
+                      input_shape=args.input_shape)
             else:
                 logging.critical(
-                        f"TFPix2Pix: Input path {input_path} doesn't exist")
+                    f"TFPix2Pix: Input path {input_path} doesn't exist")
                 sys.exit(0)
         else:
             logging.critical(
-                    f"TFPix2Pix: Weights path {weights} doesn't exist")
+                f"TFPix2Pix: Weights path {weights} doesn't exist")
             sys.exit(0)
     else:
         logging.critical(

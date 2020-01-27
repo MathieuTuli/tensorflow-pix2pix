@@ -1,5 +1,6 @@
 from argparse import _SubParsersAction
 from pathlib import Path
+from typing import Tuple
 import tensorflow as tf
 import logging
 import signal
@@ -45,6 +46,10 @@ def args(sub_parser: _SubParsersAction) -> None:
                             dest='save_freq',
                             default=20,
                             help='Default = 20. Save every X number of epochs')
+    sub_parser.add_argument('--input-shape', type=list,
+                            dest='input_shape',
+                            default=(256, 256, 3),
+                            help='Default = (256, 256, 3). Input Shape.')
     sub_parser.add_argument(
         '--gpu', action='store_true',
         dest='gpu',
@@ -74,7 +79,8 @@ def fit(dataset_path: Path,
         _lambda: int,
         checkpoint_save_freq: int,
         gpu: bool,
-        eager: bool) -> None:
+        eager: bool,
+        input_shape: Tuple[int, int, int]) -> None:
     """
     @param checkpoint_save_freq: int: number of epochs before saving checkpoint
                                       ie. checkpoint_save_freq = 20 means
@@ -111,7 +117,7 @@ def fit(dataset_path: Path,
 
     try:
         with tf.device(device):
-            generator = Generator(output_channels=3, input_shape=(256, 256, 3))
+            generator = Generator(output_channels=3, input_shape=input_shape)
             generator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                            beta_1=0.5)
             discriminator = Discriminator()
@@ -169,7 +175,7 @@ def fit(dataset_path: Path,
                 if (epoch + 1) % checkpoint_save_freq == 0:
                     # checkpoint.write(file_prefix=str(checkpoint_path))
                     generator.save_weights(
-                            str(checkpoint_path / 'generator.ckpt'))
+                        str(checkpoint_path / 'generator.ckpt'))
                     logging.info("TFPix2Pix Train: checkpoint saved.")
 
                 end = time.time()
@@ -181,7 +187,7 @@ def fit(dataset_path: Path,
                     f"{(epochs - epoch + 1) * (end - start)}s")
 
             generator.save_weights(
-                    str(checkpoint_path / 'generator.ckpt'))
+                str(checkpoint_path / 'generator.ckpt'))
     except Exception as e:
         logging.error(f"TFPix2Pix Train: {e}")
         return False

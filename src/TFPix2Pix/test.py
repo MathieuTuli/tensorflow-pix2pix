@@ -1,5 +1,6 @@
 from argparse import _SubParsersAction
 from pathlib import Path
+from typing import Tuple
 
 import tensorflow as tf
 import logging
@@ -33,6 +34,10 @@ def args(sub_parser: _SubParsersAction) -> None:
         dest='gpu',
         help="Default = False. Set if using gpu")
     sub_parser.set_defaults(gpu=False)
+    sub_parser.add_argument('--input-shape', type=list,
+                            dest='input_shape',
+                            default=(256, 256, 3),
+                            help='Default = (256, 256, 3). Input Shape.')
 
 
 def control_c_handler(_signal, frame):
@@ -47,7 +52,8 @@ def infer(checkpoint: Path,
           input_path: Path,
           output_path: Path,
           batch_size: int,
-          gpu: bool,) -> bool:
+          gpu: bool,
+          input_shape: Tuple[int, int, int]) -> bool:
     """
     @param checkpoint: can either be a specific path to a checkpoint file
                        or a dir containing multiple. In the later case,
@@ -82,7 +88,7 @@ def infer(checkpoint: Path,
     logging.debug("TFPix2Pix Test: Starting try block")
     # try:
     with tf.device(device):
-        model = Generator(output_channels=3, input_shape=(256, 256, 3))
+        model = Generator(output_channels=3, input_shape=input_shape)
         logging.debug("TFPix2Pix Test: Generator Created")
         model.load_weights(str(checkpoint / 'generator.ckpt'))
         logging.debug("TFPix2Pix Test: weights loaded.")
