@@ -8,7 +8,7 @@ import signal
 import sys
 
 from .network.helpers import load_image
-from .network.models import Generator
+from .network.models import Generator, Discriminator
 from .file_manager import save_pyplot
 
 
@@ -88,12 +88,21 @@ def infer(checkpoint: Path,
     logging.debug("TFPix2Pix Test: Starting try block")
     # try:
     with tf.device(device):
-        model = Generator(output_channels=3, input_shape=input_shape)
-        logging.debug("TFPix2Pix Test: Generator Created")
-        model.load_weights(str(checkpoint / 'generator.ckpt'))
-        logging.debug("TFPix2Pix Test: weights loaded.")
+        generator = Generator(output_channels=3, input_shape=input_shape)
+        generator_optimizer = tf.keras.optimizers.Adam(2e-4,
+                                                       beta_1=0.5)
+        discriminator = Discriminator()
+        discriminator_optimizer = tf.keras.optimizers.Adam(2e-4,
+                                                           beta_1=0.5)
+
+        checkpoint = tf.train.Checkpoint(
+            generator_optimizer=generator_optimizer,
+            discriminator_optimizer=discriminator_optimizer,
+            discriminator=discriminator,
+            generator=generator)
+        checkpoint.restore(tf.train.latest_checkpoint(str(checkpoint)))
         image = load_image(str(input_path))
-        prediction = model(image, training=False)
+        prediction = generator(image, training=False)
         if isinstance(prediction, list):
             if len(prediction) > 1:
                 prediction = prediction[0]

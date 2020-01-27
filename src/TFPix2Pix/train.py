@@ -123,11 +123,12 @@ def fit(dataset_path: Path,
             discriminator = Discriminator()
             discriminator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                                beta_1=0.5)
-            # checkpoint = tf.train.Checkpoint(
-            #     generator_optimizer=generator_optimizer,
-            #     discriminator_optimizer=discriminator_optimizer,
-            #     discriminator=discriminator,
-            #     generator=generator)
+            checkpoint = tf.train.Checkpoint(
+                generator_optimizer=generator_optimizer,
+                discriminator_optimizer=discriminator_optimizer,
+                discriminator=discriminator,
+                generator=generator)
+            checkpoint_path = checkpoint_path / 'ckpt'
 
             for epoch in range(epochs):
                 start = time.time()
@@ -173,9 +174,9 @@ def fit(dataset_path: Path,
                     train_step(input_image=input_image, target=target)
 
                 if (epoch + 1) % checkpoint_save_freq == 0:
-                    # checkpoint.write(file_prefix=str(checkpoint_path))
-                    generator.save_weights(
-                        str(checkpoint_path / 'generator.ckpt'))
+                    checkpoint.write(file_prefix=str(checkpoint_path))
+                    # generator.save_weights(
+                    #     str(checkpoint_path / 'generator.ckpt'))
                     logging.info("TFPix2Pix Train: checkpoint saved.")
 
                 end = time.time()
@@ -186,8 +187,9 @@ def fit(dataset_path: Path,
                     "TFPix2Pix Train: Estimated time remaining: " +
                     f"{(epochs - epoch + 1) * (end - start)}s")
 
-            generator.save_weights(
-                str(checkpoint_path / 'generator.ckpt'))
+            # generator.save_weights(
+            #     str(checkpoint_path / 'generator.ckpt'))
+            checkpoint.save(file_prefix=str(checkpoint_path))
     except Exception as e:
         logging.error(f"TFPix2Pix Train: {e}")
         return False
