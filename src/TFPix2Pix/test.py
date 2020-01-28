@@ -94,11 +94,11 @@ def infer(checkpoint: Path,
         tf.config.experimental.set_memory_growth(dev, True)
     logging.debug("TFPix2Pix Test: Starting try block")
     # try:
-    # image = load_image(str(input_path))
-    test_dataset = tf.data.Dataset.list_files(
-        str(input_path / 'test/*'))
-    test_dataset = test_dataset.map(load_image_test)
-    test_dataset = test_dataset.batch(batch_size)
+    image = load_image(str(input_path))
+    # test_dataset = tf.data.Dataset.list_files(
+    #     str(input_path / 'test/*'))
+    # test_dataset = test_dataset.map(load_image_test)
+    # test_dataset = test_dataset.batch(batch_size)
     try:
         with tf.device(device):
             generator = Generator(output_channels=3, input_shape=input_shape)
@@ -116,9 +116,10 @@ def infer(checkpoint: Path,
             checkpoint.restore(tf.train.latest_checkpoint(str(checkpoint)))
             # prediction = generator(image, training=True)
             prediction = None
-            for input_image, target in test_dataset.take(1):
-                prediction = generator(input_image, training=False)
-                break
+            # for input_image, target in test_dataset.take(1):
+            #     prediction = generator(input_image, training=False)
+            #     break
+            prediction = generator(image, training=False)
             plt.figure(figsize=(15, 15))
             plt.subplot(1, 3, 1)
             plt.imshow(prediction[0])

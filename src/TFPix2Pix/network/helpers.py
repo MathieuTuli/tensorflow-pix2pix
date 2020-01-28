@@ -121,4 +121,4 @@ def load_image(image_path: str) -> tf.Tensor:
         method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
     image = (tf.cast(image, tf.float32) / 127.5) - 1
-    return tf.expand_dims(image, axis=-1)
+    return tf.expand_dims(image, axis=0)

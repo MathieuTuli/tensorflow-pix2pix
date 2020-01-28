@@ -2,7 +2,7 @@ from argparse import _SubParsersAction
 from pathlib import Path
 from typing import Tuple
 
-import ttensorflow as tf
+import tensorflow as tf
 import traceback
 import logging
 import signal
