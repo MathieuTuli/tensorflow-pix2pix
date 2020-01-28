@@ -87,6 +87,7 @@ def infer(checkpoint: Path,
     device = '/device:CPU:0' if not gpu else '/device:GPU:0'
     logging.debug("TFPix2Pix Test: Starting try block")
     # try:
+    image = load_image(str(input_path))
     with tf.device(device):
         generator = Generator(output_channels=3, input_shape=input_shape)
         generator_optimizer = tf.keras.optimizers.Adam(2e-4,
@@ -101,7 +102,6 @@ def infer(checkpoint: Path,
             discriminator=discriminator,
             generator=generator)
         checkpoint.restore(tf.train.latest_checkpoint(str(checkpoint)))
-        image = load_image(str(input_path))
         prediction = generator(image, training=False)
         if isinstance(prediction, list):
             if len(prediction) > 1:
