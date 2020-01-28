@@ -99,9 +99,15 @@ def fit(dataset_path: Path,
                   f"@param buffer_size           |  {buffer_size} \n"
                   f"@param _lambda               |  {_lambda} \n"
                   f"@param checkpoint_save_freq  |  {checkpoint_save_freq} \n"
-                  f"@param gpu                   |  {gpu} \n")
+                  f"@param gpu                   |  {gpu} \n"
+                  f"@param input_shape           |  {input_shape}")
 
     device = '/device:CPU:0' if not gpu else '/device:GPU:0'
+
+    # NOTE : Hack for RTX*** GPU devices
+    gpu_devices = tf.config.experimental.list_physical_devices('GPU')
+    for dev in gpu_devices:
+        tf.config.experimental.set_memory_growth(dev, True)
     train_dataset = tf.data.Dataset.list_files(
         str(dataset_path / 'train/*'))
     train_dataset = train_dataset.map(

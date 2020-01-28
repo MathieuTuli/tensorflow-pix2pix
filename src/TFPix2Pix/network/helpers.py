@@ -92,7 +92,7 @@ def random_jitter(input_image: tf.Tensor,
 def load_image_train(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
     height = 256
     width = 256
-    input_image, real_image = load(image_path, ImageDirection.AtoB)
+    input_image, real_image = load(image_path, ImageDirection.BtoA)
     input_image, real_image = random_jitter(
         input_image, real_image, height, width)
     input_image, real_image = normalize(input_image, real_image)
@@ -103,7 +103,7 @@ def load_image_train(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
 def load_image_test(image_path: str,) -> Tuple[tf.Tensor, tf.Tensor]:
     img_height = 256
     img_width = 256
-    input_image, real_image = load(image_path, ImageDirection.AtoB)
+    input_image, real_image = load(image_path, ImageDirection.BtoA)
     input_image, real_image = resize(input_image, real_image,
                                      img_height, img_width)
     input_image, real_image = normalize(input_image, real_image)
@@ -121,4 +121,4 @@ def load_image(image_path: str) -> tf.Tensor:
         method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
     image = (tf.cast(image, tf.float32) / 127.5) - 1
-    return image
+    return tf.expand_dims(image, axis=-1)
