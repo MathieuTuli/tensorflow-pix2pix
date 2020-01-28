@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Tuple
 
 import tensorflow as tf
+import traceback
 import logging
 import signal
 import sys
@@ -98,56 +99,62 @@ def infer(checkpoint: Path,
         str(input_path / 'test/*'))
     test_dataset = test_dataset.map(load_image_test)
     test_dataset = test_dataset.batch(batch_size)
-    with tf.device(device):
-        generator = Generator(output_channels=3, input_shape=input_shape)
-        generator_optimizer = tf.keras.optimizers.Adam(2e-4,
-                                                       beta_1=0.5)
-        discriminator = Discriminator()
-        discriminator_optimizer = tf.keras.optimizers.Adam(2e-4,
+    try:
+        with tf.device(device):
+            generator = Generator(output_channels=3, input_shape=input_shape)
+            generator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                            beta_1=0.5)
+            discriminator = Discriminator()
+            discriminator_optimizer = tf.keras.optimizers.Adam(2e-4,
+                                                               beta_1=0.5)
 
-        checkpoint = tf.train.Checkpoint(
-            generator_optimizer=generator_optimizer,
-            discriminator_optimizer=discriminator_optimizer,
-            discriminator=discriminator,
-            generator=generator)
-        checkpoint.restore(tf.train.latest_checkpoint(str(checkpoint)))
-        # prediction = generator(image, training=True)
-        prediction = None
-        for input_image, target in test_dataset.take(1):
-            prediction = generator(input_image, training=False)
-            break
-        plt.figure(figsize=(15, 15))
-        plt.subplot(1, 3, 1)
-        plt.imshow(prediction[0])
-        plt.show()
-        logging.debug("TFPix2Pix: Testing: Image Generated")
-        if isinstance(prediction, list):
-            if len(prediction) > 1:
-                prediction = prediction[0]
-            else:
-                logging.critical("TFPix2Pix Test: prediction " +
-                                 "returned was a list of size 0")
-            return False
-        path = output_path / 'test.jpg'
-        save_pyplot(file_name=str(path),
-                    image=prediction)
-        logging.info(f"TFPix2Pix Test: image saved to {path}")
-        # for n, image in dataset.enumerate():
-        #     logging.debug("TFPix2Pix Test: Image\n\n")
-        #     prediction = model(image, training=False)
-        #     if isinstance(prediction, list):
-        #         if len(prediction) > 1:
-        #             prediction = prediction[0]
-        #         else:
-        #             logging.critical("TFPix2Pix Test: prediction " +
-        #                              "returned was a list of size 0")
-        #         return False
-        #     path = output_path / 'test.jpg'
-        #     save_pyplot(file_name=str(path),
-        #                 image=prediction)
-        #     logging.info(f"TFPix2Pix Test: image saved to {path}")
-    # except Exception as e:
-    #     logging.error(f"TFPix2Pix Test: Exception: {e}")
-    #     return False
+            checkpoint = tf.train.Checkpoint(
+                generator_optimizer=generator_optimizer,
+                discriminator_optimizer=discriminator_optimizer,
+                discriminator=discriminator,
+                generator=generator)
+            checkpoint.restore(tf.train.latest_checkpoint(str(checkpoint)))
+            # prediction = generator(image, training=True)
+            prediction = None
+            for input_image, target in test_dataset.take(1):
+                prediction = generator(input_image, training=False)
+                break
+            plt.figure(figsize=(15, 15))
+            plt.subplot(1, 3, 1)
+            plt.imshow(prediction[0])
+            plt.show()
+            logging.debug("TFPix2Pix: Testing: Image Generated")
+            if isinstance(prediction, list):
+                if len(prediction) > 1:
+                    prediction = prediction[0]
+                else:
+                    logging.critical("TFPix2Pix Test: prediction " +
+                                     "returned was a list of size 0")
+                return False
+            path = output_path / 'test.jpg'
+            save_pyplot(file_name=str(path),
+                        image=prediction)
+            logging.info(f"TFPix2Pix Test: image saved to {path}")
+            # for n, image in dataset.enumerate():
+            #     logging.debug("TFPix2Pix Test: Image\n\n")
+            #     prediction = model(image, training=False)
+            #     if isinstance(prediction, list):
+            #         if len(prediction) > 1:
+            #             prediction = prediction[0]
+            #         else:
+            #             logging.critical("TFPix2Pix Test: prediction " +
+            #                              "returned was a list of size 0")
+            #         return False
+            #     path = output_path / 'test.jpg'
+            #     save_pyplot(file_name=str(path),
+            #                 image=prediction)
+            #     logging.info(f"TFPix2Pix Test: image saved to {path}")
+        # except Exception as e:
+        #     logging.error(f"TFPix2Pix Test: Exception: {e}")
+        #     return False
+        return True
+    except Exception as e:
+        logging.error(f"TFPix2Pix Test: {e}")
+        traceback.print_exc()
+        return False
     return True

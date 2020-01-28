@@ -1,7 +1,9 @@
 from argparse import _SubParsersAction
 from pathlib import Path
 from typing import Tuple
-import tensorflow as tf
+
+import ttensorflow as tf
+import traceback
 import logging
 import signal
 import time
@@ -198,5 +200,6 @@ def fit(dataset_path: Path,
             checkpoint.save(file_prefix=str(checkpoint_path))
     except Exception as e:
         logging.error(f"TFPix2Pix Train: {e}")
+        traceback.print_exc()
         return False
     return True
