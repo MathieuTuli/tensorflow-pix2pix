@@ -94,7 +94,7 @@ def infer(checkpoint_path: Path,
     for dev in gpu_devices:
         tf.config.experimental.set_memory_growth(dev, True)
     logging.debug("TFPix2Pix Test: Starting try block")
-    image = load_image(str(input_path))
+    image = load_image(str(input_path), input_shape)
     try:
         with tf.device(device):
             generator = Generator(output_channels=3, input_shape=input_shape)

@@ -11,13 +11,14 @@ from ..components import ImageDirection
 
 
 def load(image_path: str,
-         direction: ImageDirection) -> Tuple[tf.Tensor, tf.Tensor]:
+         direction: ImageDirection,
+         input_shape: Tuple[int, int, int]) -> Tuple[tf.Tensor, tf.Tensor]:
     '''
     @returns: Tuple, (input_image, target_image)
     '''
 
     image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image)
+    image = tf.image.decode_jpeg(image, channels=input_shape[2])
 
     w = tf.shape(image)[1]
 
@@ -49,10 +50,11 @@ def resize(input_image: tf.Tensor,
 def random_crop(input_image: tf.Tensor,
                 real_image: tf.Tensor,
                 height: int,
-                width: int) -> Tuple[tf.Tensor, tf.Tensor]:
+                width: int,
+                channels: int) -> Tuple[tf.Tensor, tf.Tensor]:
     stacked_image = tf.stack([input_image, real_image], axis=0)
     cropped_image = tf.image.random_crop(
-        stacked_image, size=[2, height, width, 3])
+        stacked_image, size=[2, height, width, channels])
 
     return cropped_image[0], cropped_image[1]
 
@@ -69,7 +71,8 @@ def normalize(input_image: tf.Tensor,
 def random_jitter(input_image: tf.Tensor,
                   real_image: tf.Tensor,
                   height: int,
-                  width: int) -> Tuple[tf.Tensor, tf.Tensor]:
+                  width: int,
+                  channels: int) -> Tuple[tf.Tensor, tf.Tensor]:
     # Random jittering as described in the paper is to
     # 1. Resize an image to bigger height and width
     # 2. Randomnly crop to the original size
@@ -79,7 +82,7 @@ def random_jitter(input_image: tf.Tensor,
 
     # randomly cropping to 256 x 256 x 3
     input_image, real_image = random_crop(
-        input_image, real_image, height, width)
+        input_image, real_image, height, width, channels)
 
     if tf.random.uniform(()) > 0.5:
         # random mirroring
@@ -91,12 +94,14 @@ def random_jitter(input_image: tf.Tensor,
 
 def load_image_train(
         image_path: str,
-        image_direction: ImageDirection) -> Tuple[tf.Tensor, tf.Tensor]:
-    height = 256
-    width = 256
+        image_direction: ImageDirection,
+        input_shape: Tuple[int, int, int]) -> Tuple[tf.Tensor, tf.Tensor]:
+    height = input_shape[0]
+    width = input_shape[1]
+    channels = input_shape[2]
     input_image, real_image = load(image_path, image_direction)
     input_image, real_image = random_jitter(
-        input_image, real_image, height, width)
+        input_image, real_image, height, width, channels)
     input_image, real_image = normalize(input_image, real_image)
 
     return input_image, real_image
@@ -104,29 +109,30 @@ def load_image_train(
 
 def load_image_test(
         image_path: str,
-        image_direction: ImageDirection) -> Tuple[tf.Tensor, tf.Tensor]:
-    img_height = 256
-    img_width = 256
-    input_image, real_image = load(image_path, image_direction)
+        image_direction: ImageDirection,
+        input_shape: Tuple[int, int, int]) -> Tuple[tf.Tensor, tf.Tensor]:
+    height = input_shape[0]
+    width = input_shape[1]
+    input_image, real_image = load(image_path, image_direction, input_shape[2])
     input_image, real_image = resize(input_image, real_image,
-                                     img_height, img_width)
+                                     height, width)
     input_image, real_image = normalize(input_image, real_image)
 
     return input_image, real_image
 
 
-def load_image(image_path: str) -> tf.Tensor:
-    img_height = 256
-    img_width = 256
+def load_image(image_path: str,
+               input_shape: Tuple[int, int, int]) -> tf.Tensor:
+    height = input_shape[0]
+    width = input_shape[1]
+    channels = input_shape[2]
     image = tf.io.read_file(image_path)
-    image = tf.image.decode_png(image, channels=3)
+    image = tf.image.decode_png(image, channels=channels)
     image = tf.cast(image, tf.float32)
     image = tf.image.resize(
-        image, [img_height, img_width],
+        image, [height, width],
         method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
     image = (image / 127.5) - 1
     image = tf.expand_dims(image, axis=0)
-    print("\n\n\nIMAGE")
-    print(image.shape)
     return image

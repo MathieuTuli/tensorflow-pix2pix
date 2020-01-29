@@ -131,7 +131,7 @@ def fit(dataset_path: Path,
     train_dataset = tf.data.Dataset.list_files(
         str(dataset_path / 'train/*'))
     train_dataset = train_dataset.map(
-        lambda x: load_image_train(x, image_direction),
+        lambda x: load_image_train(x, image_direction, input_shape),
         num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     train_dataset = train_dataset.shuffle(buffer_size)
@@ -139,7 +139,7 @@ def fit(dataset_path: Path,
     test_dataset = tf.data.Dataset.list_files(
         str(dataset_path / 'test/*'))
     test_dataset = test_dataset.map(
-        lambda x: load_image_test(x, image_direction))
+        lambda x: load_image_test(x, image_direction, input_shape))
     test_dataset = test_dataset.batch(batch_size)
     process = None
     if tensorboard:
