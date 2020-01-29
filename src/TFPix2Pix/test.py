@@ -10,9 +10,10 @@ import sys
 
 from matplotlib import pyplot as plt
 
-from .network.helpers import load_image, load_image_test
+from .network.helpers import load_image, load_image_test, load_image_train
 from .network.models import Generator, Discriminator
 from .file_manager import save_pyplot
+from .components import ImageDirection
 
 
 def args(sub_parser: _SubParsersAction) -> None:
@@ -51,7 +52,7 @@ def control_c_handler(_signal, frame):
 
 
 # @tf.function
-def infer(checkpoint: Path,
+def infer(checkpoint_path: Path,
           input_path: Path,
           output_path: Path,
           batch_size: int,
@@ -68,7 +69,7 @@ def infer(checkpoint: Path,
     print("TFPix2Pix Testing")
     print("---------------------------------\n")
     logging.debug("TFPix2Pix Test: infer arguments: \n"
-                  f"@param checkpoint   |  {checkpoint} \n"
+                  f"@param checkpoint   |  {checkpoint_path} \n"
                   f"@param input_path   |  {input_path} \n"
                   f"@param output_path  |  {output_path} \n"
                   f"@param batch_size   |  {batch_size} \n"
@@ -93,12 +94,7 @@ def infer(checkpoint: Path,
     for dev in gpu_devices:
         tf.config.experimental.set_memory_growth(dev, True)
     logging.debug("TFPix2Pix Test: Starting try block")
-    # try:
     image = load_image(str(input_path))
-    # test_dataset = tf.data.Dataset.list_files(
-    #     str(input_path / 'test/*'))
-    # test_dataset = test_dataset.map(load_image_test)
-    # test_dataset = test_dataset.batch(batch_size)
     try:
         with tf.device(device):
             generator = Generator(output_channels=3, input_shape=input_shape)
@@ -107,22 +103,26 @@ def infer(checkpoint: Path,
             discriminator = Discriminator()
             discriminator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                                beta_1=0.5)
-
             checkpoint = tf.train.Checkpoint(
                 generator_optimizer=generator_optimizer,
                 discriminator_optimizer=discriminator_optimizer,
                 discriminator=discriminator,
                 generator=generator)
-            checkpoint.restore(tf.train.latest_checkpoint(str(checkpoint)))
+            checkpoint.restore(tf.train.latest_checkpoint(
+                checkpoint_path)).expect_partial()
             # prediction = generator(image, training=True)
-            prediction = None
             # for input_image, target in test_dataset.take(1):
             #     prediction = generator(input_image, training=False)
             #     break
-            prediction = generator(image, training=False)
+            prediction = generator(image, training=True)
+            # checkpoint_status.assert_consumed()
             plt.figure(figsize=(15, 15))
             plt.subplot(1, 3, 1)
-            plt.imshow(prediction[0])
+            plt.imshow(prediction[0] * 0.5 + 0.5)
+            plt.subplot(1, 3, 2)
+            plt.imshow(prediction[0] * 0.5 + 0.5)
+            plt.subplot(1, 3, 3)
+            plt.imshow(prediction[0] * 0.5 + 0.5)
             plt.show()
             logging.debug("TFPix2Pix: Testing: Image Generated")
             if isinstance(prediction, list):
@@ -132,9 +132,9 @@ def infer(checkpoint: Path,
                     logging.critical("TFPix2Pix Test: prediction " +
                                      "returned was a list of size 0")
                 return False
-            path = output_path / 'test.jpg'
+            path = output_path / 'test.png'
             save_pyplot(file_name=str(path),
-                        image=prediction)
+                        image=prediction[0])
             logging.info(f"TFPix2Pix Test: image saved to {path}")
             # for n, image in dataset.enumerate():
             #     logging.debug("TFPix2Pix Test: Image\n\n")

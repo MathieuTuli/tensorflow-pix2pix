@@ -73,6 +73,7 @@ if __name__ == "__main__":
     if command == 'train':
         data = Path(args.data).expanduser()
         checkpoint = Path(args.checkpoint).expanduser()
+        log_dir = Path(args.log_dir).expanduser()
 
         if file_exists(data):
             children = [str(i.name) for i in data.iterdir()]
@@ -86,8 +87,14 @@ if __name__ == "__main__":
                     f"TFPix2Pix: Checkpoint path {checkpoint} doesn't " +
                     "exist. Creating.")
                 checkpoint.mkdir(parents=True)
+            if not file_exists(log_dir):
+                logging.info(
+                    f"TFPix2Pix: Log dir path {log_dir} doesn't " +
+                    "exist. Creating.")
+                log_dir.mkdir(parents=True)
             fit(dataset_path=data,
                 checkpoint_path=checkpoint,
+                log_dir=log_dir,
                 image_direction=args.image_direction,
                 epochs=args.epochs,
                 batch_size=args.batch_size,
@@ -96,6 +103,7 @@ if __name__ == "__main__":
                 checkpoint_save_freq=args.save_freq,
                 gpu=args.gpu,
                 eager=args.eager,
+                tensorboard=args.tensorboard,
                 input_shape=args.input_shape)
         else:
             logging.critical(f"TFPix2Pix: Data path {data} doesn't exist")
@@ -106,7 +114,7 @@ if __name__ == "__main__":
         output_path = Path(args.output)
         if weights.exists():
             if input_path.exists():
-                infer(checkpoint=weights,
+                infer(checkpoint_path=weights,
                       input_path=input_path,
                       output_path=output_path,
                       batch_size=args.batch_size,

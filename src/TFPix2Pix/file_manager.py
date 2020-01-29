@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import logging
 
 
 def save_pyplot(file_name: str, image: np.ndarray) -> None:
@@ -9,3 +10,4 @@ def save_pyplot(file_name: str, image: np.ndarray) -> None:
     fig.add_axes(ax)
     ax.imshow(image)
     plt.savefig(str(file_name))
+    logging.info(f"TFPix2Pix: Save Pyplot: Image saved to {file_name}")

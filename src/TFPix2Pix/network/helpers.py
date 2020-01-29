@@ -28,7 +28,7 @@ def load(image_path: str,
     input_image = tf.cast(input_image, tf.float32)
     target_image = tf.cast(real_image, tf.float32)
 
-    if direction == ImageDirection.AtoB:
+    if direction == ImageDirection.BtoA:
         return input_image, target_image
     else:
         return target_image, input_image
@@ -89,10 +89,12 @@ def random_jitter(input_image: tf.Tensor,
     return input_image, real_image
 
 
-def load_image_train(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
+def load_image_train(
+        image_path: str,
+        image_direction: ImageDirection) -> Tuple[tf.Tensor, tf.Tensor]:
     height = 256
     width = 256
-    input_image, real_image = load(image_path, ImageDirection.BtoA)
+    input_image, real_image = load(image_path, image_direction)
     input_image, real_image = random_jitter(
         input_image, real_image, height, width)
     input_image, real_image = normalize(input_image, real_image)
@@ -100,10 +102,12 @@ def load_image_train(image_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
     return input_image, real_image
 
 
-def load_image_test(image_path: str,) -> Tuple[tf.Tensor, tf.Tensor]:
+def load_image_test(
+        image_path: str,
+        image_direction: ImageDirection) -> Tuple[tf.Tensor, tf.Tensor]:
     img_height = 256
     img_width = 256
-    input_image, real_image = load(image_path, ImageDirection.BtoA)
+    input_image, real_image = load(image_path, image_direction)
     input_image, real_image = resize(input_image, real_image,
                                      img_height, img_width)
     input_image, real_image = normalize(input_image, real_image)
@@ -115,10 +119,14 @@ def load_image(image_path: str) -> tf.Tensor:
     img_height = 256
     img_width = 256
     image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image)
+    image = tf.image.decode_png(image, channels=3)
+    image = tf.cast(image, tf.float32)
     image = tf.image.resize(
         image, [img_height, img_width],
         method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
-    image = (tf.cast(image, tf.float32) / 127.5) - 1
-    return tf.expand_dims(image, axis=0)
+    image = (image / 127.5) - 1
+    image = tf.expand_dims(image, axis=0)
+    print("\n\n\nIMAGE")
+    print(image.shape)
+    return image

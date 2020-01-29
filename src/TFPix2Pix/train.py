@@ -2,8 +2,12 @@ from argparse import _SubParsersAction
 from pathlib import Path
 from typing import Tuple
 
+from matplotlib import pyplot as plt
+
 import tensorflow as tf
+import subprocess
 import traceback
+import datetime
 import logging
 import signal
 import time
@@ -12,6 +16,7 @@ import sys
 from .network.helpers import load_image_train, load_image_test
 from .network.models import Generator, Discriminator
 from .components import ImageDirection
+from .helpers import generate_images
 
 
 def args(sub_parser: _SubParsersAction) -> None:
@@ -23,6 +28,10 @@ def args(sub_parser: _SubParsersAction) -> None:
                             dest='checkpoint',
                             required=True,
                             help='Required. Checkpoint path')
+    sub_parser.add_argument('--log-dir', type=str,
+                            dest='log_dir',
+                            required=True,
+                            help='Required. Log dir path')
     sub_parser.add_argument(
         '--image-direction', type=ImageDirection.__getitem__,
         choices=ImageDirection.__members__.values(),
@@ -58,6 +67,11 @@ def args(sub_parser: _SubParsersAction) -> None:
         help="Default = False. Set if using gpu")
     sub_parser.set_defaults(gpu=False)
     sub_parser.add_argument(
+        '--tensorboard', action='store_true',
+        dest='tensorboard',
+        help="Default = False. Set if using tensorboard")
+    sub_parser.set_defaults(gpu=False)
+    sub_parser.add_argument(
         '--eager', action='store_true',
         dest='eager',
         help="Default = False. Set if using eager execution")
@@ -66,7 +80,7 @@ def args(sub_parser: _SubParsersAction) -> None:
 
 def control_c_handler(_signal, frame):
     print("\n---------------------------------")
-    print("Pix2Pix Training: Ctrl-C. Shutting Down.")
+    print("Pix2Pix Train: Ctrl-C. Shutting Down.")
     print("---------------------------------")
     sys.exit(0)
 
@@ -74,6 +88,7 @@ def control_c_handler(_signal, frame):
 # @tf.function
 def fit(dataset_path: Path,
         checkpoint_path: Path,
+        log_dir: Path,
         image_direction: ImageDirection,
         epochs: int,
         batch_size: int,
@@ -81,6 +96,7 @@ def fit(dataset_path: Path,
         _lambda: int,
         checkpoint_save_freq: int,
         gpu: bool,
+        tensorboard: bool,
         eager: bool,
         input_shape: Tuple[int, int, int]) -> None:
     """
@@ -90,7 +106,7 @@ def fit(dataset_path: Path,
     """
     signal.signal(signal.SIGINT, control_c_handler)
     print("\n---------------------------------")
-    print("TFPix2Pix Training")
+    print("TFPix2Pix Train")
     print("---------------------------------\n")
     logging.debug("TFPix2Pix Train: Fit arguments: \n"
                   f"@param dataset_path          |  {dataset_path} \n"
@@ -102,6 +118,8 @@ def fit(dataset_path: Path,
                   f"@param _lambda               |  {_lambda} \n"
                   f"@param checkpoint_save_freq  |  {checkpoint_save_freq} \n"
                   f"@param gpu                   |  {gpu} \n"
+                  f"@param tensorboard           |  {tensorboard} \n"
+                  f"@param eager                 |  {eager} \n"
                   f"@param input_shape           |  {input_shape}")
 
     device = '/device:CPU:0' if not gpu else '/device:GPU:0'
@@ -113,15 +131,30 @@ def fit(dataset_path: Path,
     train_dataset = tf.data.Dataset.list_files(
         str(dataset_path / 'train/*'))
     train_dataset = train_dataset.map(
-        load_image_train,
+        lambda x: load_image_train(x, image_direction),
         num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     train_dataset = train_dataset.shuffle(buffer_size)
     train_dataset = train_dataset.batch(batch_size)
     test_dataset = tf.data.Dataset.list_files(
         str(dataset_path / 'test/*'))
-    test_dataset = test_dataset.map(load_image_test)
+    test_dataset = test_dataset.map(
+        lambda x: load_image_test(x, image_direction))
     test_dataset = test_dataset.batch(batch_size)
+    process = None
+    if tensorboard:
+        process = subprocess.Popen([
+            "tensorboard", f"--logdir={str(log_dir)}", "--host",
+            "localhost", "--port", "8088"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logging.info(
+            "TFPix2Pix: Train: Tensorboard started at http://localhost:8088")
+        # output, error = process.communicate()
+        # if output:
+        #     logging.info("TFPix2Pix: Train: Tensorboard output \b{output}")
+        # if error:
+        #     logging.critical("TFPix2Pix: Train: Tensorboard could not start." +
+        #                      " Reason: \n {error}")
 
     try:
         with tf.device(device):
@@ -137,12 +170,16 @@ def fit(dataset_path: Path,
                 discriminator=discriminator,
                 generator=generator)
             checkpoint_path = checkpoint_path / 'ckpt'
+            # tf.keras.utils.plot_model(generator, show_shapes=True, dpi=64)
+            # tf.keras.utils.plot_model(discriminator, show_shapes=True, dpi=64)
+            summary_writer = tf.summary.create_file_writer(str(
+                log_dir / "fit" /
+                datetime.datetime.now().strftime("Y%m%d-%H%M%S")))
 
             for epoch in range(epochs):
                 start = time.time()
-
                 # Train
-                logging.info(f"TFPix2Pix Train: Epoch: {epoch} / {epochs}")
+                logging.info(f"TFPix2Pix Train: Epoch: {epoch + 1} / {epochs}")
                 for n, (input_image, target) in train_dataset.enumerate():
                     logging.debug(
                         f"TFPix2Pix Train: Image: {n}")
@@ -179,10 +216,19 @@ def fit(dataset_path: Path,
                         discriminator_optimizer.apply_gradients(
                             zip(discriminator_gradients,
                                 discriminator.trainable_variables))
+                        with summary_writer.as_default():
+                            tf.summary.scalar(
+                                'gen_total_loss', gen_loss, step=epoch)
+                            tf.summary.scalar(
+                                'gen_gan_loss', gan_loss, step=epoch)
+                            tf.summary.scalar(
+                                'gen_l1_loss', gen_l1_loss, step=epoch)
+                            tf.summary.scalar(
+                                'disc_loss', disc_loss, step=epoch)
                     train_step(input_image=input_image, target=target)
 
                 if (epoch + 1) % checkpoint_save_freq == 0:
-                    checkpoint.write(file_prefix=str(checkpoint_path))
+                    checkpoint.save(file_prefix=str(checkpoint_path))
                     # generator.save_weights(
                     #     str(checkpoint_path / 'generator.ckpt'))
                     logging.info("TFPix2Pix Train: checkpoint saved.")
@@ -198,8 +244,21 @@ def fit(dataset_path: Path,
             # generator.save_weights(
             #     str(checkpoint_path / 'generator.ckpt'))
             checkpoint.save(file_prefix=str(checkpoint_path))
+            # tf.saved_model.save(generator, str(checkpoint / 'generator'))
+            # tf.saved_model.save(discriminator, str(
+            #     discriminator / 'generator'))
     except Exception as e:
         logging.error(f"TFPix2Pix Train: {e}")
         traceback.print_exc()
+        # TODO proper process cleanup
+    if process is not None:
+        logging.info(
+            "TFPix2Pix Train: Tensorboard is still running. " +
+            "Hit CTRL-C to stop it")
+        process.wait()
         return False
+    if process is not None:
+        logging.info("TFPix2Pix: Train: Tensorboard is still running. " +
+                     "Hit CTRL-C to stop it")
+        process.wait()
     return True
