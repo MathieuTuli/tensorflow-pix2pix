@@ -31,4 +31,4 @@ class Predictor():
     def predict(self, image_path: Path) -> np.ndarray:
         image = load_image(str(image_path), self.input_shape)
         prediction = self.generator(image, training=True)
-        return prediction[0] * 0.5 + 0.5
+        return (prediction[0] * 0.5 + 0.5).numpy()
