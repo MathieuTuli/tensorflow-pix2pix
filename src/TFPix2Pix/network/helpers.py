@@ -99,7 +99,7 @@ def load_image_train(
     height = input_shape[0]
     width = input_shape[1]
     channels = input_shape[2]
-    input_image, real_image = load(image_path, image_direction)
+    input_image, real_image = load(image_path, image_direction, input_shape)
     input_image, real_image = random_jitter(
         input_image, real_image, height, width, channels)
     input_image, real_image = normalize(input_image, real_image)
@@ -113,7 +113,7 @@ def load_image_test(
         input_shape: Tuple[int, int, int]) -> Tuple[tf.Tensor, tf.Tensor]:
     height = input_shape[0]
     width = input_shape[1]
-    input_image, real_image = load(image_path, image_direction, input_shape[2])
+    input_image, real_image = load(image_path, image_direction, input_shape)
     input_image, real_image = resize(input_image, real_image,
                                      height, width)
     input_image, real_image = normalize(input_image, real_image)
