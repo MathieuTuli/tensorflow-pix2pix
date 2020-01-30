@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Tuple
 
 import tensorflow as tf
+import numpy as np
 import traceback
 import logging
 import signal
@@ -117,13 +118,15 @@ def infer(checkpoint_path: Path,
             #     break
             prediction = generator(image, training=True)
             # checkpoint_status.assert_consumed()
+            # prediction = prediction[0]
+            prediction = np.array(prediction[0], dtype=np.uint8)
             plt.figure(figsize=(15, 15))
             plt.subplot(1, 3, 1)
-            plt.imshow(prediction[0] * 0.5 + 0.5)
+            plt.imshow(prediction * 0.5 + 0.5)
             plt.subplot(1, 3, 2)
-            plt.imshow(prediction[0] * 0.5 + 0.5)
+            plt.imshow(prediction * 0.5 + 0.5)
             plt.subplot(1, 3, 3)
-            plt.imshow(prediction[0] * 0.5 + 0.5)
+            plt.imshow(prediction * 0.5 + 0.5)
             plt.show()
             logging.debug("TFPix2Pix: Testing: Image Generated")
             if isinstance(prediction, list):

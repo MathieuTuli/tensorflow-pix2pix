@@ -248,10 +248,9 @@ def fit(dataset_path: Path,
 
             # generator.save_weights(
             #     str(checkpoint_path / 'generator.ckpt'))
-            if epoch == 0:
-                for input_image, target in test_dataset.take(1):
-                    generate_images(generator, input_image, target)
-                    break
+            for input_image, target in test_dataset.take(1):
+                generate_images(generator, input_image, target)
+                break
             checkpoint.save(file_prefix=str(checkpoint_path))
             # tf.saved_model.save(generator, str(checkpoint / 'generator'))
             # tf.saved_model.save(discriminator, str(
