@@ -1,4 +1,5 @@
-# TensorFlow YOLOV3
+# Tensorflow Pix2Pix
+# Python Package "TFPix2Pix"
 
 ### Pure TensorFlow 2.0 implementation of the Pix2Pix model - built of the Google tutorial
 #### Features
