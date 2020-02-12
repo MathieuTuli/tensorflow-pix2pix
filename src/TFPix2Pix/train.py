@@ -30,8 +30,10 @@ def args(sub_parser: _SubParsersAction) -> None:
                             help='Required. Checkpoint path')
     sub_parser.add_argument('--log-dir', type=str,
                             dest='log_dir',
-                            required=True,
-                            help='Required. Log dir path')
+                            required=False,
+                            default=None,
+                            help='Default = checkpoint dir. Log dir path. ' +
+                            'logs will be written to "args.checkpoint/logs"')
     sub_parser.add_argument(
         '--image-direction', type=ImageDirection.__getitem__,
         choices=ImageDirection.__members__.values(),

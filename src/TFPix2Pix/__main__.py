@@ -73,7 +73,9 @@ if __name__ == "__main__":
     if command == 'train':
         data = Path(args.data).expanduser()
         checkpoint = Path(args.checkpoint).expanduser()
-        log_dir = Path(args.log_dir).expanduser()
+        if args.log_dir is None:
+            args.log_dir = Path(args.checkpoint)
+        log_dir = (args.log_dir / 'logs').expanduser()
 
         if file_exists(data):
             children = [str(i.name) for i in data.iterdir()]

@@ -122,7 +122,7 @@ def infer(checkpoint_path: Path,
             prediction = np.array(prediction[0], dtype=np.uint8)
             plt.figure(figsize=(15, 15))
             plt.subplot(1, 3, 1)
-            plt.imshow(prediction * 0.5 + 0.5)
+            plt.imshow(image[0])
             plt.subplot(1, 3, 2)
             plt.imshow(prediction * 0.5 + 0.5)
             plt.subplot(1, 3, 3)
@@ -136,7 +136,7 @@ def infer(checkpoint_path: Path,
                     logging.critical("TFPix2Pix Test: prediction " +
                                      "returned was a list of size 0")
                 return False
-            path = output_path / 'test.png'
+            path = output_path / 'image.png'
             save_pyplot(file_name=str(path),
                         image=prediction[0])
             logging.info(f"TFPix2Pix Test: image saved to {path}")
