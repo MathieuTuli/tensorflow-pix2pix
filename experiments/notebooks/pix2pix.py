@@ -126,7 +126,7 @@ def downsample(filters, size, apply_batchnorm=True):
 
     result = tf.keras.Sequential()
     result.add(
-        tf.keras.layers.Conv2D(filters, size, strides=2, padding='same',
+        tf.keras.layers.Conv2D(filters, size, strides=1, padding='same',
                                kernel_initializer=initializer, use_bias=False))
 
     if apply_batchnorm:
@@ -147,7 +147,7 @@ def upsample(filters, size, apply_dropout=False):
 
     result = tf.keras.Sequential()
     result.add(
-        tf.keras.layers.Conv2DTranspose(filters, size, strides=2,
+        tf.keras.layers.Conv2DTranspose(filters, size, strides=1,
                                         padding='same',
                                         kernel_initializer=initializer,
                                         use_bias=False))
@@ -193,7 +193,7 @@ def Generator():
 
     initializer = tf.random_normal_initializer(0., 0.02)
     last = tf.keras.layers.Conv2DTranspose(OUTPUT_CHANNELS, 4,
-                                           strides=2,
+                                           strides=1,
                                            padding='same',
                                            kernel_initializer=initializer,
                                            activation='tanh')  # (bs, 256, 256, 3)
@@ -319,8 +319,8 @@ def generate_images(model, test_input, tar):
     plt.show()
 
 
-# for example_input, example_target in test_dataset.take(1):
-#     generate_images(generator, example_input, example_target)
+for example_input, example_target in test_dataset.take(1):
+    generate_images(generator, example_input, example_target)
 
 EPOCHS = 5
 
@@ -387,7 +387,7 @@ def fit(train_ds, epochs, test_ds):
     checkpoint.save(file_prefix=checkpoint_prefix)
 
 
-# fit(train_dataset, EPOCHS, test_dataset)
-checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
-for inp, tar in test_dataset.take(5):
-    generate_images(generator, inp, tar)
+fit(train_dataset, EPOCHS, test_dataset)
+# checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+# for inp, tar in test_dataset.take(5):
+#     generate_images(generator, inp, tar)
