@@ -170,6 +170,8 @@ def fit(dataset_path: Path,
                 discriminator_optimizer=discriminator_optimizer,
                 discriminator=discriminator,
                 generator=generator)
+            checkpoint.restore(tf.train.latest_checkpoint(
+                checkpoint_path)).expect_partial()
             checkpoint_path = checkpoint_path / 'ckpt'
             # tf.keras.utils.plot_model(generator, show_shapes=True, dpi=64)
             # tf.keras.utils.plot_model(discriminator, show_shapes=True, dpi=64)
