@@ -30,7 +30,12 @@ class Predictor():
             str(weights))).expect_partial()
 
     def predict(self, image_path: Path) -> np.ndarray:
-        image, _ = load_image_test(
-            str(image_path), ImageDirection.AtoB, self.input_shape)
-        prediction = self.generator(image, training=True)
-        return np.array(prediction[0], dtype=np.uint8)
+        test_dataset = tf.data.Dataset.list_files(
+            str(image_path))
+        test_dataset = test_dataset.map(
+            lambda x: load_image_test(x, ImageDirection.AtoB,
+                                      self.input_shape))
+        test_dataset = test_dataset.batch(1)
+        for image, s in test_dataset.take(1):
+            prediction = self.generator(image, training=True)
+            return np.array(prediction[0], dtype=np.uint8)
