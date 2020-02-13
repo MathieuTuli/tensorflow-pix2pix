@@ -2,7 +2,54 @@ from tensorflow.keras import layers
 from typing import Union, Tuple, List
 
 import tensorflow as tf
-import logging
+
+
+def downsample_sequential(
+        filters: int,
+        kernel_size: Union[int, Tuple[int, int]],
+        batch_norm: bool = True,
+        strides: Union[int, Tuple[int, int]] = 2,) -> tf.keras.Model:
+    initializer = tf.random_normal_initializer(0., 0.02)
+
+    layer = tf.keras.Sequential()
+    layer.add(
+        tf.keras.layers.Conv2D(filters=filters,
+                               kernel_size=kernel_size,
+                               strides=strides,
+                               padding='same',
+                               kernel_initializer=initializer,
+                               use_bias=False))
+
+    if batch_norm:
+        layer.add(tf.keras.layers.BatchNormalization())
+
+    layer.add(tf.keras.layers.LeakyReLU())
+
+    return layer
+
+
+def upsample_sequential(filters: int,
+                        kernel_size: Union[int, Tuple[int, int]],
+                        strides: Union[int, Tuple[int, int]] = 2,
+                        dropout: bool = False) -> tf.keras.Model:
+    initializer = tf.random_normal_initializer(0., 0.02)
+
+    layer = tf.keras.Sequential()
+    layer.add(
+        tf.keras.layers.Conv2DTranspose(filters=filters,
+                                        kernel_size=kernel_size,
+                                        strides=strides,
+                                        padding='same',
+                                        kernel_initializer=initializer,
+                                        use_bias=False))
+
+    layer.add(tf.keras.layers.BatchNormalization())
+
+    if dropout:
+        layer.add(tf.keras.layers.Dropout(0.5))
+
+    layer.add(tf.keras.layers.ReLU())
+    return layer
 
 
 class Downsample(layers.Layer):
@@ -54,6 +101,7 @@ class Upsample(layers.Layer):
     def __init__(self,
                  filters: int,
                  kernel_size: Union[int, Tuple[int, int]],
+                 strides: Union[int, Tuple[int, int]] = 2,
                  dropout: bool = False,
                  **kwargs) -> None:
         super(Upsample, self).__init__(**kwargs)
@@ -61,7 +109,7 @@ class Upsample(layers.Layer):
         self.layer = layers.Conv2DTranspose(
             filters=filters,
             kernel_size=kernel_size,
-            strides=2,
+            strides=strides,
             padding='same',
             kernel_initializer=initializer,
             use_bias=False)

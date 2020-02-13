@@ -5,9 +5,12 @@ from pathlib import Path
 import tensorflow as tf
 import logging
 
+# from .layers import (
+#     Downsample,
+#     Upsample)
 from .layers import (
-    Downsample,
-    Upsample)
+    downsample_sequential as Downsample,
+    upsample_sequential as Upsample)
 from .helpers import load_image
 
 
@@ -24,7 +27,7 @@ class Generator(Model):
         super(Generator, self).__init__(**kwargs)
         self.down_stack = [
             Downsample(filters=64, kernel_size=4,
-                       batch_norm=False, input_shape=input_shape),
+                       batch_norm=False),  # , input_shape=input_shape),
             Downsample(filters=128, kernel_size=4),
             Downsample(filters=256, kernel_size=4),
             Downsample(filters=512, kernel_size=4),
@@ -71,7 +74,6 @@ class Generator(Model):
         return layer
 
     @staticmethod
-    @tf.function()
     def loss(generator_output: tf.keras.Model,
              discriminator_output: tf.keras.Model,
              target: tf.data.Dataset,
@@ -126,7 +128,6 @@ class Discriminator(Model):
         return layer
 
     @staticmethod
-    @tf.function()
     def loss(
             real_output: tf.keras.Model,
             generated_output: tf.keras.Model,) -> tf.losses.BinaryCrossentropy:
