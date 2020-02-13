@@ -32,10 +32,11 @@ class Predictor():
     def predict(self, image_path: Path) -> np.ndarray:
         test_dataset = tf.data.Dataset.list_files(
             str(image_path))
+        print(test_dataset)
         test_dataset = test_dataset.map(
             lambda x: load_image_test(x, ImageDirection.AtoB,
                                       self.input_shape))
         test_dataset = test_dataset.batch(1)
         for image, s in test_dataset.take(1):
             prediction = self.generator(image, training=True)
-            return np.array(prediction[0], dtype=np.uint8)
+            return prediction[0]
