@@ -4,7 +4,7 @@ from pathlib import Path
 import tensorflow as tf
 import numpy as np
 
-from .network.helpers import load_image
+from .network.helpers import load_image, load_image_test
 from .network.models import Generator, Discriminator
 
 
@@ -29,6 +29,6 @@ class Predictor():
             str(weights))).expect_partial()
 
     def predict(self, image_path: Path) -> np.ndarray:
-        image = load_image(str(image_path), self.input_shape)
+        image, _ = load_image_test(str(image_path), self.input_shape)
         prediction = self.generator(image, training=True)
         return np.array(prediction[0], dtype=np.uint8)
