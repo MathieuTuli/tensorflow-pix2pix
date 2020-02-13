@@ -38,5 +38,6 @@ class Predictor():
                                       self.input_shape))
         test_dataset = test_dataset.batch(1)
         for image, s in test_dataset.take(1):
+            print(image)
             prediction = self.generator(image, training=True)
             return prediction[0]
