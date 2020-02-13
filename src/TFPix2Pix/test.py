@@ -15,6 +15,7 @@ from .network.helpers import load_image, load_image_test, load_image_train
 from .network.models import Generator, Discriminator
 from .file_manager import save_pyplot
 from .components import ImageDirection
+from .helpers import generate_images
 
 
 def args(sub_parser: _SubParsersAction) -> None:
@@ -95,7 +96,13 @@ def infer(checkpoint_path: Path,
     for dev in gpu_devices:
         tf.config.experimental.set_memory_growth(dev, True)
     logging.debug("TFPix2Pix Test: Starting try block")
-    image = load_image(str(input_path), input_shape)
+    # image = load_image(str(input_path), input_shape)
+    test_dataset = tf.data.Dataset.list_files(
+        str(input_path / 'test/*'))
+    test_dataset = test_dataset.map(
+        lambda x: load_image_test(x, ImageDirection.AtoB, input_shape))
+    test_dataset = test_dataset.batch(batch_size)
+    count = 0
     try:
         with tf.device(device):
             generator = Generator(
@@ -116,30 +123,37 @@ def infer(checkpoint_path: Path,
             # for input_image, target in test_dataset.take(1):
             #     prediction = generator(input_image, training=False)
             #     break
-            prediction = generator(image, training=True)
-            # checkpoint_status.assert_consumed()
-            # prediction = prediction[0]
-            prediction = np.array(prediction[0], dtype=np.uint8)
-            plt.figure(figsize=(15, 15))
-            plt.subplot(1, 3, 1)
-            plt.imshow(image[0])
-            plt.subplot(1, 3, 2)
-            plt.imshow(prediction * 0.5 + 0.5)
-            plt.subplot(1, 3, 3)
-            plt.imshow(prediction * 0.5 + 0.5)
-            plt.show()
-            logging.debug("TFPix2Pix: Testing: Image Generated")
-            if isinstance(prediction, list):
-                if len(prediction) > 1:
-                    prediction = prediction[0]
-                else:
-                    logging.critical("TFPix2Pix Test: prediction " +
-                                     "returned was a list of size 0")
-                return False
-            path = output_path / 'image.png'
-            save_pyplot(file_name=str(path),
-                        image=prediction[0])
-            logging.info(f"TFPix2Pix Test: image saved to {path}")
+            for n, (input_image, target) in test_dataset.enumerate():
+                target, prediction = generate_images(
+                    generator, input_image, target)
+                # prediction = generator(image, training=True)
+                # # checkpoint_status.assert_consumed()
+                # # prediction = prediction[0]
+                # prediction = np.array(prediction[0], dtype=np.uint8)
+                # plt.figure(figsize=(15, 15))
+                # plt.subplot(1, 3, 1)
+                # plt.imshow(image[0])
+                # plt.subplot(1, 3, 2)
+                # plt.imshow(prediction * 0.5 + 0.5)
+                # plt.subplot(1, 3, 3)
+                # plt.imshow(prediction * 0.5 + 0.5)
+                # plt.show()
+                logging.debug("TFPix2Pix: Testing: Image Generated")
+                # if isinstance(prediction, list):
+                #     if len(prediction) > 1:
+                #         prediction = prediction[0]
+                #     else:
+                #         logging.critical("TFPix2Pix Test: prediction " +
+                #                          "returned was a list of size 0")
+                #     return False
+                path = output_path / f'{count}_target.png'
+                save_pyplot(file_name=str(path),
+                            image=target)
+                path = output_path / f'{count}_pred.png'
+                save_pyplot(file_name=str(path),
+                            image=prediction)
+                count += 1
+                logging.info(f"TFPix2Pix Test: image saved to {path}")
             # for n, image in dataset.enumerate():
             #     logging.debug("TFPix2Pix Test: Image\n\n")
             #     prediction = model(image, training=False)
