@@ -6,6 +6,7 @@ import numpy as np
 
 from .network.helpers import load_image, load_image_test
 from .network.models import Generator, Discriminator
+from .components import ImageDirection
 
 
 class Predictor():
@@ -29,6 +30,7 @@ class Predictor():
             str(weights))).expect_partial()
 
     def predict(self, image_path: Path) -> np.ndarray:
-        image, _ = load_image_test(str(image_path), self.input_shape)
+        image, _ = load_image_test(
+            str(image_path), ImageDirection.AtoB, self.input_shape)
         prediction = self.generator(image, training=True)
         return np.array(prediction[0], dtype=np.uint8)
