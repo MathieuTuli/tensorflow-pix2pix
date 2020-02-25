@@ -14,7 +14,9 @@ import time
 import sys
 
 from .network.helpers import load_image_train, load_image_test
-from .network.models import Generator, Discriminator
+# from .network.models import Generator, Discriminator
+from .network.models import generator as Generator, \
+    discriminator as Discriminator, discriminator_loss, generator_loss
 from .components import ImageDirection
 from .helpers import generate_images
 
@@ -28,12 +30,6 @@ def args(sub_parser: _SubParsersAction) -> None:
                             dest='checkpoint',
                             required=True,
                             help='Required. Checkpoint path')
-    sub_parser.add_argument('--log-dir', type=str,
-                            dest='log_dir',
-                            required=False,
-                            default=None,
-                            help='Default = checkpoint dir. Log dir path. ' +
-                            'logs will be written to "args.checkpoint/logs"')
     sub_parser.add_argument(
         '--image-direction', type=ImageDirection.__getitem__,
         choices=ImageDirection.__members__.values(),
@@ -43,6 +39,12 @@ def args(sub_parser: _SubParsersAction) -> None:
     sub_parser.add_argument('--epochs', type=int,
                             required=True,
                             help='Required. Number of epochs to train for')
+    sub_parser.add_argument('--log-dir', type=str,
+                            dest='log_dir',
+                            required=False,
+                            default=None,
+                            help='Default = checkpoint dir. Log dir path. ' +
+                            'logs will be written to "args.checkpoint/logs"')
     sub_parser.add_argument('--batch-size', type=int,
                             dest='batch_size',
                             default=1,
@@ -110,19 +112,19 @@ def fit(dataset_path: Path,
     print("\n---------------------------------")
     print("TFPix2Pix Train")
     print("---------------------------------\n")
-    logging.debug("TFPix2Pix Train: Fit arguments: \n"
-                  f"@param dataset_path          |  {dataset_path} \n"
-                  f"@param checkpoint_path       |  {checkpoint_path} \n"
-                  f"@param image_direction       |  {image_direction} \n"
-                  f"@param epochs                |  {epochs} \n"
-                  f"@param batch_size            |  {batch_size} \n"
-                  f"@param buffer_size           |  {buffer_size} \n"
-                  f"@param _lambda               |  {_lambda} \n"
-                  f"@param checkpoint_save_freq  |  {checkpoint_save_freq} \n"
-                  f"@param gpu                   |  {gpu} \n"
-                  f"@param tensorboard           |  {tensorboard} \n"
-                  f"@param eager                 |  {eager} \n"
-                  f"@param input_shape           |  {input_shape}")
+    logging.info("TFPix2Pix Train: Fit arguments: \n"
+                 f"@param dataset_path          |  {dataset_path} \n"
+                 f"@param checkpoint_path       |  {checkpoint_path} \n"
+                 f"@param image_direction       |  {image_direction} \n"
+                 f"@param epochs                |  {epochs} \n"
+                 f"@param batch_size            |  {batch_size} \n"
+                 f"@param buffer_size           |  {buffer_size} \n"
+                 f"@param _lambda               |  {_lambda} \n"
+                 f"@param checkpoint_save_freq  |  {checkpoint_save_freq} \n"
+                 f"@param gpu                   |  {gpu} \n"
+                 f"@param tensorboard           |  {tensorboard} \n"
+                 f"@param eager                 |  {eager} \n"
+                 f"@param input_shape           |  {input_shape}")
 
     device = '/device:CPU:0' if not gpu else '/device:GPU:0'
 
@@ -160,8 +162,9 @@ def fit(dataset_path: Path,
 
     try:
         with tf.device(device):
-            generator = Generator(
-                output_channels=input_shape[2], input_shape=input_shape)
+            # generator = Generator(
+            #     output_channels=input_shape[2], input_shape=input_shape)
+            generator = Generator(input_shape=input_shape)
             generator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                            beta_1=0.5)
             discriminator = Discriminator()
@@ -181,6 +184,7 @@ def fit(dataset_path: Path,
                 log_dir / "fit" /
                 datetime.datetime.now().strftime("Y%m%d-%H%M%S")))
 
+            loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
             for epoch in range(epochs):
                 if epoch == 0:
                     for input_image, target in test_dataset.take(1):
@@ -206,11 +210,18 @@ def fit(dataset_path: Path,
                             disc_generated_output = discriminator(
                                 [input_image, gen_output], training=True)
 
-                            gen_loss, gan_loss, gen_l1_loss = Generator.loss(
-                                gen_output, disc_generated_output,
-                                target, _lambda=_lambda)
-                            disc_loss = Discriminator.loss(
-                                disc_real_output, disc_generated_output)
+                            # gen_loss, gan_loss, gen_l1_loss = Generator.loss(
+                            #     gen_output, disc_generated_output,
+                            #     target, _lambda=_lambda)
+                            # disc_loss = Discriminator.loss(
+                            #     disc_real_output, disc_generated_output)
+                            gen_loss, gan_loss, gen_l1_loss = generator_loss(
+                                disc_generated_output, gen_output,
+                                target, loss_object=loss_object,
+                                _lambda=_lambda)
+                            disc_loss = discriminator_loss(
+                                disc_real_output, disc_generated_output,
+                                loss_object=loss_object)
 
                         generator_gradients = gen_tape.gradient(
                             gen_loss,
