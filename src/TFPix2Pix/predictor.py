@@ -42,4 +42,4 @@ class Predictor():
         test_dataset = test_dataset.batch(1)
         for image, _ in test_dataset.take(1):
             prediction = self.generator(image, training=True)
-            return prediction[0].numpy()
+            return (prediction[0] * 0.5 + 0.5).numpy()
