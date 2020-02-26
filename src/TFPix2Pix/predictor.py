@@ -1,6 +1,7 @@
 from typing import Tuple
 from pathlib import Path
 
+from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
 
@@ -32,12 +33,22 @@ class Predictor():
     def predict(self, image_path: Path) -> np.ndarray:
         test_dataset = tf.data.Dataset.list_files(
             str(image_path))
-        print(test_dataset)
         test_dataset = test_dataset.map(
             lambda x: load_image_test(x, ImageDirection.AtoB,
                                       self.input_shape))
         test_dataset = test_dataset.batch(1)
-        for image, s in test_dataset.take(1):
-            print(image)
+        for image, _ in test_dataset.take(1):
             prediction = self.generator(image, training=True)
+            plt.figure(figsize=(15, 15))
+
+            display_list = [image[0], image[0], prediction[0]]
+            title = ['Input Image', 'Ground Truth', 'Predicted Image']
+
+            for i in range(3):
+                plt.subplot(1, 3, i+1)
+                plt.title(title[i])
+                # getting the pixel values between [0, 1] to plot it.
+                plt.imshow(display_list[i] * 0.5 + 0.5)
+                plt.axis('off')
+            plt.show()
             return prediction[0]
