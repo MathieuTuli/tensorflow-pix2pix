@@ -17,8 +17,9 @@ class Predictor():
                  weights: Path,
                  input_shape: Tuple[int, int, int]) -> None:
         self.input_shape = input_shape
-        self.generator = Generator(
-            output_channels=input_shape[2], input_shape=input_shape)
+        # self.generator = Generator(
+        #     output_channels=input_shape[2], input_shape=input_shape)
+        self.generator = Generator(input_shape=input_shape)
         generator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                        beta_1=0.5)
         discriminator = Discriminator()
