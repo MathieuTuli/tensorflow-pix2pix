@@ -6,7 +6,9 @@ import tensorflow as tf
 import numpy as np
 
 from .network.helpers import load_image, load_image_test
-from .network.models import Generator, Discriminator
+# from .network.models import Generator, Discriminator
+from .network.models import generator as Generator, \
+        discriminator as Discriminator
 from .components import ImageDirection
 
 
