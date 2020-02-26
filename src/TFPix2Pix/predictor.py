@@ -8,7 +8,7 @@ import numpy as np
 from .network.helpers import load_image, load_image_test
 # from .network.models import Generator, Discriminator
 from .network.models import generator as Generator, \
-        discriminator as Discriminator
+    discriminator as Discriminator
 from .components import ImageDirection
 
 
@@ -42,4 +42,16 @@ class Predictor():
         test_dataset = test_dataset.batch(1)
         for image, _ in test_dataset.take(1):
             prediction = self.generator(image, training=True)
+            plt.figure(figsize=(15, 15))
+
+            display_list = [image[0], image[0], prediction[0]]
+            title = ['Input Image', 'Ground Truth', 'Predicted Image']
+
+            for i in range(3):
+                plt.subplot(1, 3, i+1)
+                plt.title(title[i])
+                # getting the pixel values between [0, 1] to plot it.
+                plt.imshow(display_list[i] * 0.5 + 0.5)
+                plt.axis('off')
+            plt.savefig('/home/mat/Downloads/test_2.png')
             return prediction[0].numpy()
