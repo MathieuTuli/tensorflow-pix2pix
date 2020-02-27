@@ -42,4 +42,7 @@ class Predictor():
         test_dataset = test_dataset.batch(1)
         for image, _ in test_dataset.take(1):
             prediction = self.generator(image, training=True)
+            plt.imshow(prediction[0] * 0.5 + 0.5)
+            plt.axis('off')
+            plt.savefig('/home/mat/Downloads/image.png')
             return (prediction[0] * 0.5 + 0.5).numpy()
