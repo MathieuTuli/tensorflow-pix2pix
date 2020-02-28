@@ -33,16 +33,17 @@ class Predictor():
         checkpoint.restore(tf.train.latest_checkpoint(
             str(weights))).expect_partial()
 
-    def predict(self, image_path: Path) -> np.ndarray:
-        test_dataset = tf.data.Dataset.list_files(
-            str(image_path))
-        test_dataset = test_dataset.map(
-            lambda x: load_image_test(x, ImageDirection.AtoB,
-                                      self.input_shape))
-        test_dataset = test_dataset.batch(1)
-        for image, _ in test_dataset.take(1):
-            prediction = self.generator(image, training=True)
-            plt.imshow(prediction[0] * 0.5 + 0.5)
+    def predict(self, image: tf.Tensor) -> np.ndarray:
+        prediction = self.generator(image, training=True)
+        display_list = [image[0], prediction[0]]
+        title = ['Input Image', 'Predicted Image']
+
+        for i in range(2):
+            plt.subplot(1, 2, i+1)
+            plt.title(title[i])
+            # getting the pixel values between [0, 1] to plot it.
+            plt.imshow(display_list[i] * 0.5 + 0.5)
             plt.axis('off')
-            plt.savefig('/home/mat/Downloads/image.png')
-            return (prediction[0] * 0.5 + 0.5).numpy()
+        plt.show()
+        plt.savefig('/home/mat/Downloads/image.png')
+        return (prediction[0] * 0.5 + 0.5).numpy()
