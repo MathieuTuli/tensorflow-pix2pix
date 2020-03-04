@@ -35,13 +35,4 @@ class Predictor():
 
     def predict(self, image: tf.Tensor) -> np.ndarray:
         prediction = self.generator(image, training=True)
-        display_list = [image[0], prediction[0]]
-        title = ['Input Image', 'Predicted Image']
-
-        for i in range(2):
-            plt.subplot(1, 2, i+1)
-            plt.title(title[i])
-            # getting the pixel values between [0, 1] to plot it.
-            plt.imshow(display_list[i] * 0.5 + 0.5)
-            plt.axis('off')
         return (prediction[0] * 0.5 + 0.5).numpy()
