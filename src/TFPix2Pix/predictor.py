@@ -44,6 +44,4 @@ class Predictor():
             # getting the pixel values between [0, 1] to plot it.
             plt.imshow(display_list[i] * 0.5 + 0.5)
             plt.axis('off')
-        plt.show()
-        plt.savefig('/home/mat/Downloads/image.png')
         return (prediction[0] * 0.5 + 0.5).numpy()
