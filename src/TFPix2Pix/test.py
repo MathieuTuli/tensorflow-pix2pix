@@ -12,7 +12,9 @@ import sys
 from matplotlib import pyplot as plt
 
 from .network.helpers import load_image, load_image_test, load_image_train
-from .network.models import Generator, Discriminator
+# from .network.models import Generator, Discriminator
+from .network.models import generator as Generator, \
+    discriminator as Discriminator, discriminator_loss, generator_loss
 from .file_manager import save_pyplot
 from .components import ImageDirection
 from .helpers import generate_images
@@ -105,8 +107,11 @@ def infer(checkpoint_path: Path,
     count = 0
     try:
         with tf.device(device):
-            generator = Generator(
-                output_channels=input_shape[2], input_shape=input_shape)
+            # generator = Generator(
+            #     output_channels=input_shape[2], input_shape=input_shape)
+            generator = Generator(input_shape=input_shape)
+            generator_optimizer = tf.keras.optimizers.Adam(2e-4,
+                                                           beta_1=0.5)
             generator_optimizer = tf.keras.optimizers.Adam(2e-4,
                                                            beta_1=0.5)
             discriminator = Discriminator()

@@ -27,4 +27,5 @@ def generate_images(model: tf.keras.Model,
         plt.imshow(display_list[i] * 0.5 + 0.5)
         plt.axis('off')
     plt.show()
+    print(prediction[0])
     return target[0], prediction[0]
