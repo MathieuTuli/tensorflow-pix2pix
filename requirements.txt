@@ -49,7 +49,7 @@ tensorflow-gpu==2.1.0
 termcolor==1.1.0
 -e git+https://github.com/mathieutuli/tensorflow-pix2pix@e2b7f16978b80ac34a3cf7a036a4c08cdcd480e8#egg=TFPix2Pix
 traitlets==4.3.3
-urllib3==1.25.7
+urllib3==1.26.5
 wcwidth==0.1.7
 Werkzeug==0.16.0
 wrapt==1.11.2
